@@ -5,12 +5,20 @@
       "destination": "/admin.html"
     },
     {
-      "source": "/profile",
+      "source": "/admin.html",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/profile.html",
       "destination": "/profile.html"
     },
     {
+      "source": "/fav/:path*",
+      "destination": "/fav/:path*"
+    },
+    {
       "source": "/:slug",
-      "destination": "/profile.html?u=:slug"
+      "destination": "/profile.html"
     }
   ],
   "cleanUrls": true,
