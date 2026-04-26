@@ -114,30 +114,40 @@
   </div>
 
   <script>
-    // Get the user slug from URL - supports Vercel clean URLs
+    // CRITICAL: Get the user slug from the URL path
+    // This works with Vercel's rewrite rule
     function getUserSlug() {
-      // Check query parameter first (from Vercel rewrite)
+      // Get the current path without the domain
+      let path = window.location.pathname;
+      
+      // Remove leading slash
+      let slug = path.replace(/^\//, '').replace(/\/$/, '');
+      
+      // Also check query parameter as fallback
       let urlParams = new URLSearchParams(window.location.search);
-      let slug = urlParams.get('u');
+      let querySlug = urlParams.get('u');
       
-      // If no query param, check the path for clean URL
-      if (!slug) {
-        let path = window.location.pathname;
-        slug = path.replace(/^\/|\/$/g, '');
+      // Use path slug if it exists and is not reserved
+      if (slug && slug !== '' && slug !== 'profile.html' && slug !== 'admin.html' && slug !== 'favicon.ico' && !slug.startsWith('fav/')) {
+        return slug;
       }
       
-      // If still no slug, check hash (fallback for GitHub Pages)
-      if (!slug && window.location.hash && window.location.hash.length > 1) {
-        slug = window.location.hash.substring(1);
+      // Fallback to query param
+      if (querySlug && querySlug !== 'profile.html') {
+        return querySlug;
       }
       
-      // Filter out reserved paths
-      if (!slug || slug === '' || slug === 'index.html' || slug === 'admin' || slug === 'admin.html' || slug === 'profile.html' || slug === 'favicon.ico' || slug.startsWith('fav/')) {
-        return null;
+      // Last resort: check hash (for GitHub Pages)
+      if (window.location.hash && window.location.hash.length > 1) {
+        return window.location.hash.substring(1);
       }
       
-      return slug;
+      return null;
     }
+
+    // Store the slug globally
+    const CURRENT_SLUG = getUserSlug();
+    console.log('Loading profile for slug:', CURRENT_SLUG);
 
     // Wait for Supabase to be available
     function initApp() {
@@ -152,6 +162,13 @@
       const SUPABASE_URL = 'https://dyxxpuirsuqtuehvijdf.supabase.co';
       const SUPABASE_KEY = 'sb_publishable_8IaNO6bOuQHZdVyAPeP1Qg_sjjcGcVy';
       const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      // If no slug, show 404 immediately
+      if (!CURRENT_SLUG) {
+        console.log('No slug found');
+        show404();
+        return;
+      }
 
       // ── Sketchy draw utils ──
       function sketchLine(c, x1, y1, x2, y2, j) {
@@ -464,17 +481,10 @@
 
       // ── MAIN: load profile from Supabase ──
       async function loadProfile() {
-        const slug = getUserSlug();
-        console.log('Loading profile for slug:', slug);
+        console.log('Fetching profile for slug:', CURRENT_SLUG);
         
-        if (!slug) { 
-          console.log('No slug found, showing 404');
-          show404(); 
-          return; 
-        }
-
-        const { data, error } = await sb.from('profiles').select('*').eq('slug', slug).maybeSingle();
-        console.log('Supabase response:', { data, error, slug });
+        const { data, error } = await sb.from('profiles').select('*').eq('slug', CURRENT_SLUG).maybeSingle();
+        console.log('Supabase response:', { data, error, slug: CURRENT_SLUG });
         
         if (error || !data) { 
           console.error('Profile not found:', error);
@@ -487,7 +497,7 @@
         if (loadingEl) loadingEl.style.display = 'none';
 
         // Title
-        document.title = (data.display_name || slug) + ' — lies.lat';
+        document.title = (data.display_name || CURRENT_SLUG) + ' — lies.lat';
 
         // PFP
         const pfpImg = document.getElementById('pfp-img');
@@ -504,7 +514,7 @@
           bgVideo.src = data.bg_video;
         }
 
-        // Playlist - supports both stored URLs and Supabase Storage public URLs
+        // Playlist
         if (data.tracks && data.tracks.length) {
           playlist = data.tracks.map(t => ({
             title: t.title || 'untitled',
