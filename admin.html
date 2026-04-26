@@ -19,14 +19,11 @@
     .btn-danger { border-color: rgba(255,80,80,0.15); color: rgba(255,80,80,0.4); }
     .btn-danger:hover { border-color: rgba(255,80,80,0.4); color: rgba(255,80,80,0.8); }
     .btn-sm { padding: 6px 16px; font-size: 9px; letter-spacing: 2px; }
-    .btn-success { border-color: rgba(80,200,80,0.2); color: rgba(80,200,80,0.5); }
-    .btn-success:hover { border-color: rgba(80,200,80,0.4); color: rgba(80,200,80,0.9); }
 
     input, select, textarea { background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.1); color: #fff; font-family: inherit; font-size: 13px; padding: 8px 0; outline: none; width: 100%; transition: border-color 0.25s; }
     input:focus, select:focus, textarea:focus { border-color: rgba(255,255,255,0.3); }
     input::placeholder { color: rgba(255,255,255,0.12); }
-    select { cursor: pointer; }
-    select option { background: #111; }
+    select { cursor: pointer; } select option { background: #111; }
     textarea { resize: vertical; min-height: 60px; border: 1px solid rgba(255,255,255,0.1); padding: 8px; border-radius: 3px; }
 
     ::-webkit-scrollbar { width: 4px; }
@@ -47,7 +44,7 @@
 
     /* DASHBOARD */
     .dashboard { display: none; min-height: 100vh; }
-    .top-bar { border-bottom: 1px solid rgba(255,255,255,0.06); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .top-bar { border-bottom: 1px solid rgba(255,255,255,0.06); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #000; z-index: 50; }
     .top-bar-title { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; opacity: 0.25; }
     .main { padding: 40px 32px; max-width: 1100px; margin: 0 auto; }
     .section-title { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; opacity: 0.2; margin-bottom: 24px; }
@@ -60,35 +57,49 @@
     .user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); flex-shrink: 0; }
     .user-name { font-size: 13px; color: rgba(255,255,255,0.8); }
     .user-slug { font-size: 10px; color: rgba(255,255,255,0.25); letter-spacing: 1px; margin-top: 2px; }
-    .user-card-actions { display: flex; gap: 8px; margin-top: 14px; }
-    .user-status { position: absolute; top: 16px; right: 16px; width: 6px; height: 6px; border-radius: 50%; background: rgba(80,200,80,0.5); }
+    .user-card-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .user-dot { position: absolute; top: 16px; right: 16px; width: 6px; height: 6px; border-radius: 50%; background: rgba(80,200,80,0.4); }
 
-    /* CREATE USER MODAL */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center; }
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 100; align-items: center; justify-content: center; overflow-y: auto; padding: 24px; }
     .modal-overlay.open { display: flex; }
-    .modal { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; padding: 36px; width: 520px; max-height: 90vh; overflow-y: auto; }
+    .modal { background: #080808; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; padding: 36px; width: 100%; max-width: 540px; }
     .modal-title { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; opacity: 0.2; margin-bottom: 32px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
-    .form-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .form-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 22px; }
     .form-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; opacity: 0.3; }
     .form-actions { display: flex; gap: 12px; margin-top: 32px; justify-content: flex-end; }
-    .section-divider { border: none; border-top: 1px solid rgba(255,255,255,0.05); margin: 24px 0; }
+    .divider { border: none; border-top: 1px solid rgba(255,255,255,0.05); margin: 20px 0; }
+    .slug-hint { font-size: 10px; color: rgba(88,101,242,0.5); letter-spacing: 1px; margin-top: 4px; }
 
-    /* EFFECTS CONFIG */
-    .effects-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .effect-toggle { border: 1px solid rgba(255,255,255,0.06); border-radius: 3px; padding: 10px 14px; cursor: pointer; transition: all 0.2s; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.25); display: flex; align-items: center; gap: 8px; }
-    .effect-toggle.active { border-color: rgba(88,101,242,0.3); color: rgba(88,101,242,0.7); }
-    .effect-toggle-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.1); flex-shrink: 0; }
-    .effect-toggle.active .effect-toggle-dot { background: rgba(88,101,242,0.7); }
+    /* EFFECTS */
+    .effects-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .eff-btn { border: 1px solid rgba(255,255,255,0.06); border-radius: 3px; padding: 10px 14px; cursor: pointer; transition: all 0.2s; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.22); display: flex; align-items: center; gap: 8px; background: transparent; font-family: inherit; }
+    .eff-btn.on { border-color: rgba(88,101,242,0.3); color: rgba(88,101,242,0.7); }
+    .eff-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.08); flex-shrink: 0; }
+    .eff-btn.on .eff-dot { background: rgba(88,101,242,0.7); }
+
+    /* AUDIO UPLOAD */
+    .tracks-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .track-row { display: flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.06); border-radius: 3px; padding: 8px 12px; }
+    .track-title-input { flex: 1; border: none; border-bottom: 1px solid rgba(255,255,255,0.1); background: transparent; color: #fff; font-family: inherit; font-size: 12px; padding: 2px 0; outline: none; }
+    .track-title-input:focus { border-color: rgba(255,255,255,0.3); }
+    .track-src { font-size: 10px; color: rgba(255,255,255,0.2); flex: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .track-del { background: none; border: none; color: rgba(255,80,80,0.3); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 4px; transition: color 0.2s; font-family: inherit; }
+    .track-del:hover { color: rgba(255,80,80,0.8); }
+    .upload-zone { border: 1px dashed rgba(255,255,255,0.08); border-radius: 3px; padding: 16px; text-align: center; cursor: pointer; transition: border-color 0.2s; position: relative; }
+    .upload-zone:hover { border-color: rgba(255,255,255,0.18); }
+    .upload-zone.drag { border-color: rgba(88,101,242,0.4); }
+    .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+    .upload-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.2); pointer-events: none; }
+    .upload-progress { height: 2px; background: rgba(88,101,242,0.2); border-radius: 1px; margin-top: 8px; overflow: hidden; display: none; }
+    .upload-progress-bar { height: 100%; background: rgba(88,101,242,0.7); width: 0%; transition: width 0.3s; }
 
     /* TOAST */
-    .toast { position: fixed; bottom: 24px; right: 24px; background: #111; border: 1px solid rgba(255,255,255,0.08); padding: 12px 20px; font-size: 11px; letter-spacing: 1px; border-radius: 3px; opacity: 0; transform: translateY(8px); transition: all 0.3s; z-index: 999; }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #111; border: 1px solid rgba(255,255,255,0.08); padding: 12px 20px; font-size: 11px; letter-spacing: 1px; border-radius: 3px; opacity: 0; transform: translateY(8px); transition: all 0.3s; z-index: 9999; pointer-events: none; }
     .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.success { border-color: rgba(80,200,80,0.2); color: rgba(80,200,80,0.8); }
-    .toast.error { border-color: rgba(255,80,80,0.2); color: rgba(255,80,80,0.8); }
-
-    /* PROFILE PREVIEW */
-    .slug-preview { font-size: 10px; color: rgba(88,101,242,0.5); letter-spacing: 1px; margin-top: 4px; }
+    .toast.ok  { border-color: rgba(80,200,80,0.25); color: rgba(80,200,80,0.85); }
+    .toast.err { border-color: rgba(255,80,80,0.25); color: rgba(255,80,80,0.85); }
   </style>
 </head>
 <body>
@@ -98,14 +109,14 @@
   <div class="auth-box">
     <div class="auth-title">lies.lat admin</div>
     <div class="auth-field">
-      <input type="email" id="username" placeholder="email" autocomplete="email" autofocus>
+      <input type="email" id="u-email" placeholder="email" autocomplete="email" autofocus>
       <div class="field-line"></div>
     </div>
     <div class="auth-field">
-      <input type="password" id="password" placeholder="password" autocomplete="current-password">
+      <input type="password" id="u-pass" placeholder="password" autocomplete="current-password">
       <div class="field-line"></div>
     </div>
-    <div class="error-msg" id="err"></div>
+    <div class="error-msg" id="auth-err"></div>
     <button class="btn" onclick="login()">enter</button>
   </div>
 </div>
@@ -115,20 +126,20 @@
   <div class="top-bar">
     <div class="top-bar-title">lies.lat / admin</div>
     <div style="display:flex;gap:12px;align-items:center;">
-      <a href="/" style="font-size:9px;letter-spacing:2px;text-transform:uppercase;opacity:0.2;text-decoration:none;color:#fff;">← site</a>
-      <button class="btn btn-sm btn-primary" onclick="openCreateModal()">+ new user</button>
+      <a href="/" style="font-size:9px;letter-spacing:2px;text-transform:uppercase;opacity:0.18;color:#fff;">← site</a>
+      <button class="btn btn-sm btn-primary" onclick="openModal()">+ new user</button>
       <button class="btn btn-sm" onclick="logout()">sign out</button>
     </div>
   </div>
   <div class="main">
     <div class="section-title">users</div>
     <div class="users-grid" id="users-grid">
-      <div style="font-size:11px;opacity:0.2;letter-spacing:2px;">loading...</div>
+      <div style="font-size:11px;opacity:0.15;letter-spacing:2px;">loading...</div>
     </div>
   </div>
 </div>
 
-<!-- CREATE/EDIT USER MODAL -->
+<!-- MODAL -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <div class="modal-title" id="modal-title">new user</div>
@@ -140,41 +151,41 @@
       </div>
       <div class="form-field">
         <div class="form-label">url slug</div>
-        <input type="text" id="f-slug" placeholder="mev" oninput="updateSlugPreview()">
-        <div class="slug-preview" id="slug-preview">lies.lat/mev</div>
+        <input type="text" id="f-slug" placeholder="mev" oninput="slugInput()">
+        <div class="slug-hint" id="slug-hint">lies.lat/...</div>
       </div>
     </div>
 
     <div class="form-field">
       <div class="form-label">discord user id</div>
-      <input type="text" id="f-discord" placeholder="922332301126414337" oninput="previewDiscordPfp()">
+      <input type="text" id="f-discord" placeholder="922332301126414337">
     </div>
 
     <div class="form-row">
       <div class="form-field">
-        <div class="form-label">tiktok url</div>
+        <div class="form-label">tiktok</div>
         <input type="text" id="f-tiktok" placeholder="https://tiktok.com/@user">
       </div>
       <div class="form-field">
-        <div class="form-label">twitter / x url</div>
+        <div class="form-label">twitter / x</div>
         <input type="text" id="f-twitter" placeholder="https://x.com/user">
       </div>
     </div>
 
     <div class="form-row">
       <div class="form-field">
-        <div class="form-label">instagram url</div>
+        <div class="form-label">instagram</div>
         <input type="text" id="f-instagram" placeholder="https://instagram.com/user">
       </div>
       <div class="form-field">
-        <div class="form-label">custom link url</div>
-        <input type="text" id="f-link" placeholder="https://...">
+        <div class="form-label">custom link label</div>
+        <input type="text" id="f-link-label" placeholder="my site">
       </div>
     </div>
 
     <div class="form-field">
-      <div class="form-label">custom link label</div>
-      <input type="text" id="f-link-label" placeholder="my website">
+      <div class="form-label">custom link url</div>
+      <input type="text" id="f-link" placeholder="https://...">
     </div>
 
     <div class="form-field">
@@ -182,35 +193,42 @@
       <input type="text" id="f-video" placeholder="https://github.com/.../video.mp4">
     </div>
 
-    <div class="form-field">
-      <div class="form-label">music tracks (json array)</div>
-      <textarea id="f-tracks" placeholder='[{"title":"SONG NAME","src":"/tracks/song.mp3"}]'></textarea>
+    <hr class="divider">
+
+    <!-- AUDIO TRACKS -->
+    <div class="form-label" style="margin-bottom:14px;">music tracks</div>
+    <div class="tracks-list" id="tracks-list"></div>
+
+    <div class="upload-zone" id="upload-zone">
+      <input type="file" id="audio-file-input" accept="audio/*" multiple onchange="handleFileSelect(this.files)">
+      <div class="upload-label">drop audio files here or click to upload</div>
+      <div class="upload-progress" id="upload-progress">
+        <div class="upload-progress-bar" id="upload-bar"></div>
+      </div>
+    </div>
+    <div style="font-size:9px;color:rgba(255,255,255,0.12);letter-spacing:1px;margin-top:8px;">
+      or paste a direct url below
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <input type="text" id="f-track-url" placeholder="https://.../song.mp3" style="flex:2;">
+      <input type="text" id="f-track-title" placeholder="track title" style="flex:1;">
+      <button class="btn btn-sm" onclick="addTrackUrl()" style="flex-shrink:0;">add</button>
     </div>
 
-    <hr class="section-divider">
-    <div class="form-label" style="margin-bottom:12px;">effects</div>
+    <hr class="divider">
+
+    <!-- EFFECTS -->
+    <div class="form-label" style="margin-bottom:14px;">effects</div>
     <div class="effects-grid" id="effects-grid">
-      <div class="effect-toggle active" data-effect="snow" onclick="toggleEffect(this)">
-        <div class="effect-toggle-dot"></div>
-        snow
-      </div>
-      <div class="effect-toggle active" data-effect="sparkle" onclick="toggleEffect(this)">
-        <div class="effect-toggle-dot"></div>
-        sparkle trail
-      </div>
-      <div class="effect-toggle active" data-effect="crossCursor" onclick="toggleEffect(this)">
-        <div class="effect-toggle-dot"></div>
-        cross cursor
-      </div>
-      <div class="effect-toggle" data-effect="rain" onclick="toggleEffect(this)">
-        <div class="effect-toggle-dot"></div>
-        rain
-      </div>
+      <button class="eff-btn on" data-fx="snow"        onclick="toggleFx(this)"><div class="eff-dot"></div>snow</button>
+      <button class="eff-btn on" data-fx="sparkle"     onclick="toggleFx(this)"><div class="eff-dot"></div>sparkle trail</button>
+      <button class="eff-btn on" data-fx="crossCursor" onclick="toggleFx(this)"><div class="eff-dot"></div>cross cursor</button>
+      <button class="eff-btn"    data-fx="rain"        onclick="toggleFx(this)"><div class="eff-dot"></div>rain</button>
     </div>
 
     <div class="form-actions">
       <button class="btn btn-sm" onclick="closeModal()">cancel</button>
-      <button class="btn btn-sm btn-primary" onclick="saveUser()">save</button>
+      <button class="btn btn-sm btn-primary" id="save-btn" onclick="saveUser()">save</button>
     </div>
   </div>
 </div>
@@ -223,21 +241,22 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
   let editingId = null
+  // tracks array: [{title, src}] — src is either a full URL or a storage path
+  let tracksList = []
 
   // ── Auth ──
   document.querySelectorAll('input').forEach(el => {
-    el.addEventListener('keydown', e => { if (e.key === 'Enter') login() })
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' && !document.getElementById('modal').classList.contains('open')) login() })
   })
 
   async function login() {
-    const email = document.getElementById('username').value.trim()
-    const pass  = document.getElementById('password').value
-    const err   = document.getElementById('err')
+    const email = document.getElementById('u-email').value.trim()
+    const pass  = document.getElementById('u-pass').value
+    const err   = document.getElementById('auth-err')
     err.textContent = ''
     if (!email || !pass) { err.textContent = 'fill in both fields'; return }
-
-    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass })
-    if (error) { err.textContent = error.message || 'denied'; document.getElementById('password').value = ''; return }
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass })
+    if (error) { err.textContent = error.message || 'denied'; document.getElementById('u-pass').value = ''; return }
     showDashboard()
   }
 
@@ -261,12 +280,10 @@
   // ── Users ──
   async function loadUsers() {
     const grid = document.getElementById('users-grid')
-    grid.innerHTML = '<div style="font-size:11px;opacity:0.2;letter-spacing:2px;">loading...</div>'
-
+    grid.innerHTML = '<div style="font-size:11px;opacity:0.15;letter-spacing:2px;">loading...</div>'
     const { data, error } = await sb.from('profiles').select('*').order('created_at', { ascending: false })
-    if (error) { grid.innerHTML = `<div style="font-size:11px;color:rgba(255,80,80,0.5);">${error.message}</div>`; return }
-    if (!data.length) { grid.innerHTML = '<div style="font-size:11px;opacity:0.15;letter-spacing:2px;">no users yet</div>'; return }
-
+    if (error) { grid.innerHTML = `<div style="color:rgba(255,80,80,0.5);font-size:11px;">${error.message}</div>`; return }
+    if (!data || !data.length) { grid.innerHTML = '<div style="font-size:11px;opacity:0.12;letter-spacing:2px;">no users yet — create one</div>'; return }
     grid.innerHTML = ''
     data.forEach(u => grid.appendChild(buildCard(u)))
   }
@@ -275,27 +292,27 @@
     const card = document.createElement('div')
     card.className = 'user-card'
     card.innerHTML = `
-      <div class="user-status"></div>
+      <div class="user-dot"></div>
       <div class="user-card-header">
-        <img class="user-avatar" src="${u.avatar_url || ''}" onerror="this.src=''" alt="">
+        <img class="user-avatar" id="avatar-${u.id}" src="${u.avatar_url || ''}" onerror="this.src=''" alt="">
         <div>
           <div class="user-name">${u.display_name || u.slug}</div>
           <div class="user-slug">lies.lat/${u.slug}</div>
         </div>
       </div>
-      <div style="font-size:10px;opacity:0.2;letter-spacing:1px;margin-bottom:4px;">${u.discord_id ? 'discord: '+u.discord_id : ''}</div>
+      ${u.discord_id ? `<div style="font-size:9px;opacity:0.18;letter-spacing:1px;margin-bottom:4px;">discord ${u.discord_id}</div>` : ''}
+      ${u.tracks && u.tracks.length ? `<div style="font-size:9px;opacity:0.18;letter-spacing:1px;margin-bottom:4px;">${u.tracks.length} track${u.tracks.length>1?'s':''}</div>` : ''}
       <div class="user-card-actions">
-        <button class="btn btn-sm btn-primary" onclick='editUser(${JSON.stringify(u)})'>edit</button>
-        <a class="btn btn-sm" href="/u/${u.slug}" target="_blank">view →</a>
+        <button class="btn btn-sm btn-primary" onclick='editUser(${JSON.stringify(u).replace(/'/g,"&#39;")})'>edit</button>
+        <a class="btn btn-sm" href="/profile.html?u=${u.slug}" target="_blank">view →</a>
         <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">del</button>
       </div>
     `
-    // try to load discord avatar
-    if (u.discord_id) fetchDiscordAvatar(u.discord_id, card.querySelector('.user-avatar'))
+    if (u.discord_id) loadDiscordAvatar(u.discord_id, `avatar-${u.id}`)
     return card
   }
 
-  async function fetchDiscordAvatar(discordId, imgEl) {
+  async function loadDiscordAvatar(discordId, imgId) {
     const apis = [
       { url: `https://japi.rest/discord/v1/user/${discordId}`, parse: j => j.data?.avatar },
       { url: `https://discordlookup.mesalytic.moe/v1/user/${discordId}`, parse: j => j.avatar?.id },
@@ -304,7 +321,7 @@
       try {
         const res = await fetch(api.url); if (!res.ok) continue
         const json = await res.json(); const av = api.parse(json)
-        if (av) { imgEl.src = `https://cdn.discordapp.com/avatars/${discordId}/${av}.${av.startsWith('a_')?'gif':'png'}?size=128`; break }
+        if (av) { const el = document.getElementById(imgId); if (el) el.src = `https://cdn.discordapp.com/avatars/${discordId}/${av}.${av.startsWith('a_')?'gif':'png'}?size=128`; break }
       } catch(e) {}
     }
   }
@@ -312,14 +329,13 @@
   async function deleteUser(id) {
     if (!confirm('delete this user?')) return
     const { error } = await sb.from('profiles').delete().eq('id', id)
-    if (error) { showToast(error.message, 'error'); return }
-    showToast('user deleted')
-    loadUsers()
+    if (error) { toast(error.message, 'err'); return }
+    toast('user deleted', 'ok'); loadUsers()
   }
 
   // ── Modal ──
-  function openCreateModal() {
-    editingId = null
+  function openModal() {
+    editingId = null; tracksList = []
     document.getElementById('modal-title').textContent = 'new user'
     clearForm()
     document.getElementById('modal').classList.add('open')
@@ -328,23 +344,25 @@
   function editUser(u) {
     editingId = u.id
     document.getElementById('modal-title').textContent = 'edit user'
-    document.getElementById('f-name').value = u.display_name || ''
-    document.getElementById('f-slug').value = u.slug || ''
+    document.getElementById('f-name').value    = u.display_name || ''
+    document.getElementById('f-slug').value    = u.slug || ''
     document.getElementById('f-discord').value = u.discord_id || ''
-    document.getElementById('f-tiktok').value = u.socials?.tiktok || ''
-    document.getElementById('f-twitter').value = u.socials?.twitter || ''
+    document.getElementById('f-tiktok').value    = u.socials?.tiktok || ''
+    document.getElementById('f-twitter').value   = u.socials?.twitter || ''
     document.getElementById('f-instagram').value = u.socials?.instagram || ''
-    document.getElementById('f-link').value = u.socials?.link || ''
+    document.getElementById('f-link').value       = u.socials?.link || ''
     document.getElementById('f-link-label').value = u.socials?.link_label || ''
-    document.getElementById('f-video').value = u.bg_video || ''
-    document.getElementById('f-tracks').value = u.tracks ? JSON.stringify(u.tracks, null, 2) : ''
-    updateSlugPreview()
+    document.getElementById('f-video').value      = u.bg_video || ''
+    slugInput()
 
-    // restore effects
-    document.querySelectorAll('.effect-toggle').forEach(el => {
-      const eff = el.dataset.effect
-      const on = u.effects ? u.effects[eff] : (eff === 'snow' || eff === 'sparkle' || eff === 'crossCursor')
-      el.classList.toggle('active', !!on)
+    tracksList = u.tracks ? [...u.tracks] : []
+    renderTracks()
+
+    // effects
+    document.querySelectorAll('.eff-btn').forEach(el => {
+      const fx = el.dataset.fx
+      const on = u.effects ? !!u.effects[fx] : (fx === 'snow' || fx === 'sparkle' || fx === 'crossCursor')
+      el.classList.toggle('on', on)
     })
 
     document.getElementById('modal').classList.add('open')
@@ -353,46 +371,108 @@
   function closeModal() { document.getElementById('modal').classList.remove('open') }
 
   function clearForm() {
-    ['f-name','f-slug','f-discord','f-tiktok','f-twitter','f-instagram','f-link','f-link-label','f-video','f-tracks'].forEach(id => {
-      document.getElementById(id).value = ''
+    ;['f-name','f-slug','f-discord','f-tiktok','f-twitter','f-instagram','f-link','f-link-label','f-video','f-track-url','f-track-title'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = ''
     })
-    document.getElementById('slug-preview').textContent = 'lies.lat/...'
-    document.querySelectorAll('.effect-toggle').forEach(el => {
-      const eff = el.dataset.effect
-      el.classList.toggle('active', eff === 'snow' || eff === 'sparkle' || eff === 'crossCursor')
+    document.getElementById('slug-hint').textContent = 'lies.lat/...'
+    document.querySelectorAll('.eff-btn').forEach(el => {
+      const fx = el.dataset.fx
+      el.classList.toggle('on', fx === 'snow' || fx === 'sparkle' || fx === 'crossCursor')
+    })
+    tracksList = []
+    renderTracks()
+  }
+
+  function slugInput() {
+    const v = document.getElementById('f-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'')
+    document.getElementById('slug-hint').textContent = 'lies.lat/' + (v || '...')
+  }
+
+  function toggleFx(el) { el.classList.toggle('on') }
+
+  // ── Tracks ──
+  function renderTracks() {
+    const list = document.getElementById('tracks-list')
+    list.innerHTML = ''
+    tracksList.forEach((t, i) => {
+      const row = document.createElement('div')
+      row.className = 'track-row'
+      row.innerHTML = `
+        <input class="track-title-input" value="${t.title || ''}" placeholder="title" oninput="tracksList[${i}].title=this.value">
+        <div class="track-src" title="${t.src}">${t.src.length > 40 ? '…'+t.src.slice(-38) : t.src}</div>
+        <button class="track-del" onclick="removeTrack(${i})">×</button>
+      `
+      list.appendChild(row)
     })
   }
 
-  function updateSlugPreview() {
-    const val = document.getElementById('f-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'')
-    document.getElementById('slug-preview').textContent = 'lies.lat/' + (val || '...')
+  function removeTrack(i) {
+    tracksList.splice(i, 1)
+    renderTracks()
   }
 
-  function previewDiscordPfp() { /* live preview could go here */ }
+  function addTrackUrl() {
+    const url   = document.getElementById('f-track-url').value.trim()
+    const title = document.getElementById('f-track-title').value.trim()
+    if (!url) { toast('enter a url', 'err'); return }
+    tracksList.push({ title: title || url.split('/').pop().replace(/\.[^.]+$/, ''), src: url })
+    document.getElementById('f-track-url').value = ''
+    document.getElementById('f-track-title').value = ''
+    renderTracks()
+  }
 
-  function toggleEffect(el) { el.classList.toggle('active') }
+  // ── Audio upload to Supabase Storage ──
+  const uploadZone = document.getElementById('upload-zone')
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag') })
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'))
+  uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('drag'); handleFileSelect(e.dataTransfer.files) })
 
+  async function handleFileSelect(files) {
+    if (!files || !files.length) return
+    const prog = document.getElementById('upload-progress')
+    const bar  = document.getElementById('upload-bar')
+    prog.style.display = 'block'
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      bar.style.width = Math.round((i / files.length) * 100) + '%'
+
+      // slug-based folder: audio/{slug}/{filename}
+      const slug = document.getElementById('f-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'') || 'shared'
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+      const path = `${slug}/${safeName}`
+
+      const { error } = await sb.storage.from('audio').upload(path, file, { upsert: true })
+      if (error) { toast('upload failed: ' + error.message, 'err'); continue }
+
+      const title = file.name.replace(/\.[^.]+$/, '')
+      tracksList.push({ title, src: path })  // store path, not full URL
+      renderTracks()
+      toast('uploaded: ' + title, 'ok')
+    }
+    bar.style.width = '100%'
+    setTimeout(() => { prog.style.display = 'none'; bar.style.width = '0%' }, 800)
+    // reset file input
+    document.getElementById('audio-file-input').value = ''
+  }
+
+  // ── Save ──
   async function saveUser() {
     const slug = document.getElementById('f-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'')
-    if (!slug) { showToast('slug is required', 'error'); return }
+    if (!slug) { toast('slug is required', 'err'); return }
+
+    const saveBtn = document.getElementById('save-btn')
+    saveBtn.textContent = 'saving...'; saveBtn.disabled = true
 
     const effects = {}
-    document.querySelectorAll('.effect-toggle').forEach(el => {
-      effects[el.dataset.effect] = el.classList.contains('active')
-    })
-
-    let tracks = null
-    try {
-      const tv = document.getElementById('f-tracks').value.trim()
-      if (tv) tracks = JSON.parse(tv)
-    } catch(e) { showToast('invalid tracks json', 'error'); return }
+    document.querySelectorAll('.eff-btn').forEach(el => { effects[el.dataset.fx] = el.classList.contains('on') })
 
     const payload = {
       slug,
       display_name: document.getElementById('f-name').value.trim(),
       discord_id:   document.getElementById('f-discord').value.trim(),
       bg_video:     document.getElementById('f-video').value.trim(),
-      tracks,
+      tracks:       tracksList.length ? tracksList : null,
       effects,
       socials: {
         tiktok:     document.getElementById('f-tiktok').value.trim(),
@@ -411,17 +491,17 @@
       ;({ error } = await sb.from('profiles').insert({ ...payload, created_at: new Date().toISOString() }))
     }
 
-    if (error) { showToast(error.message, 'error'); return }
-    showToast(editingId ? 'user updated' : 'user created', 'success')
-    closeModal()
-    loadUsers()
+    saveBtn.textContent = 'save'; saveBtn.disabled = false
+
+    if (error) { toast(error.message, 'err'); return }
+    toast(editingId ? 'saved' : 'user created', 'ok')
+    closeModal(); loadUsers()
   }
 
   // ── Toast ──
-  function showToast(msg, type = 'success') {
+  function toast(msg, type = 'ok') {
     const t = document.getElementById('toast')
-    t.textContent = msg
-    t.className = `toast ${type} show`
+    t.textContent = msg; t.className = `toast ${type} show`
     setTimeout(() => t.className = 'toast', 2800)
   }
 
