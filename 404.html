@@ -4,54 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>lies.lat</title>
-  <style>
-    body {
-      background: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      font-family: monospace;
-      color: rgba(255,255,255,0.3);
-      font-size: 12px;
-    }
-  </style>
   <script>
-    // Get the current path (e.g., /mev)
+    // Get the current path
     let path = window.location.pathname;
-    
-    // Remove leading slash and any trailing slashes
     let slug = path.replace(/^\/|\/$/g, '');
     
-    console.log('Path:', path);
-    console.log('Slug:', slug);
-    
-    // If it's just the root or index, go to home
-    if (!slug || slug === '' || slug === 'index.html') {
-      window.location.replace('/');
-    } 
-    // If it's admin or profile.html, let it load normally
-    else if (slug === 'admin' || slug === 'admin.html' || slug === 'profile.html' || slug === 'favicon.ico' || slug.startsWith('fav/')) {
-      // Do nothing - let the page load
-    }
-    // If it's the profile page being accessed directly
-    else if (slug === 'profile.html') {
-      // Check if there's a 'u' param
-      let urlParams = new URLSearchParams(window.location.search);
-      let userSlug = urlParams.get('u');
-      if (userSlug && userSlug !== 'profile.html') {
-        // This is a valid profile request, do nothing
-      }
-    }
-    // For anything else (like "mev"), treat it as a username
-    else {
-      // Remove any query params or hash
+    // If there's a slug (like "mev") and it's not a reserved path
+    if (slug && slug !== '' && slug !== 'index.html' && slug !== 'admin.html' && slug !== 'profile.html' && slug !== 'favicon.ico' && !slug.startsWith('fav/')) {
+      // Remove any query params
       slug = slug.split('?')[0].split('#')[0];
-      
-      // Redirect to profile.html with user param
-      window.location.replace('/profile.html?u=' + slug);
+      // Redirect to hash-based URL (this is the only way on GitHub Pages)
+      window.location.replace('/#' + slug);
     }
   </script>
 </head>
-<body>Loading profile...</body>
+<body style="background:#000;display:flex;justify-content:center;align-items:center;height:100vh;color:white;font-family:monospace;">
+  Redirecting...
+</body>
 </html>
