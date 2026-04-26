@@ -13,14 +13,9 @@
       "destination": "/profile.html"
     },
     {
-      "source": "/fav/:path*",
-      "destination": "/fav/:path*"
-    },
-    {
-      "source": "/:slug",
+      "source": "/(.*)",
       "destination": "/profile.html"
     }
   ],
-  "cleanUrls": true,
-  "trailingSlash": false
+  "cleanUrls": true
 }
