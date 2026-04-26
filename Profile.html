@@ -64,6 +64,17 @@
       align-items: center; justify-content: center; flex-direction: column; gap: 12px;
       font-family: 'JetBrains Mono', monospace; color: rgba(255,255,255,0.12);
       font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
+      z-index: 100;
+    }
+    
+    /* Loading state */
+    #loading {
+      display: flex; position: fixed; inset: 0;
+      align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      color: rgba(255,255,255,0.2);
+      font-size: 11px; letter-spacing: 2px;
+      z-index: 100;
     }
   </style>
 </head>
@@ -74,6 +85,8 @@
   <div class="enter-overlay" id="enter-overlay">
     <canvas id="enter-text" width="280" height="20"></canvas>
   </div>
+
+  <div id="loading">loading...</div>
 
   <div class="pfp-wrap">
     <img class="pfp" id="pfp-img" src="" alt="">
@@ -102,370 +115,431 @@
   </div>
 
   <script>
-    const SUPABASE_URL = 'https://dyxxpuirsuqtuehvijdf.supabase.co'
-    const SUPABASE_KEY = 'sb_publishable_8IaNO6bOuQHZdVyAPeP1Qg_sjjcGcVy'
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
-
-    // ── Get slug from ?u= query param (set by 404.html redirect) ──
-    function getSlug() {
-      return new URLSearchParams(location.search).get('u') || null
-    }
-
-    // ── Sketchy draw utils ──
-    function sketchLine(c, x1, y1, x2, y2, j) {
-      const segs = 4 + Math.floor(Math.random() * 3)
-      c.beginPath()
-      c.moveTo(x1 + (Math.random() - .5) * j, y1 + (Math.random() - .5) * j)
-      for (let i = 1; i <= segs; i++) {
-        const t = i / segs
-        c.lineTo(x1 + (x2 - x1) * t + (Math.random() - .5) * j, y1 + (y2 - y1) * t + (Math.random() - .5) * j)
+    // Wait for Supabase to be available
+    function initApp() {
+      if (typeof supabase === 'undefined') {
+        console.log('Waiting for Supabase...');
+        setTimeout(initApp, 100);
+        return;
       }
-      c.stroke()
-    }
-    function sketchPath(c, d, sc, ox, oy, j) {
-      const cmds = d.match(/[MLCZ][^MLCZ]*/gi); if (!cmds) return; c.beginPath()
-      for (const cmd of cmds) {
-        const type = cmd[0], nums = cmd.slice(1).trim().split(/[\s,]+/).map(Number)
-        if (type === 'M') c.moveTo(nums[0]*sc+ox+(Math.random()-.5)*j, nums[1]*sc+oy+(Math.random()-.5)*j)
-        else if (type === 'L') c.lineTo(nums[0]*sc+ox+(Math.random()-.5)*j, nums[1]*sc+oy+(Math.random()-.5)*j)
-        else if (type === 'C') { for (let i = 0; i < nums.length; i += 6) c.bezierCurveTo(nums[i]*sc+ox+(Math.random()-.5)*j,nums[i+1]*sc+oy+(Math.random()-.5)*j,nums[i+2]*sc+ox+(Math.random()-.5)*j,nums[i+3]*sc+oy+(Math.random()-.5)*j,nums[i+4]*sc+ox+(Math.random()-.5)*j,nums[i+5]*sc+oy+(Math.random()-.5)*j) }
-        else if (type === 'Z' || type === 'z') c.closePath()
-      }
-      c.stroke()
-    }
+      
+      console.log('Supabase loaded, initializing...');
+      
+      const SUPABASE_URL = 'https://dyxxpuirsuqtuehvijdf.supabase.co';
+      const SUPABASE_KEY = 'sb_publishable_8IaNO6bOuQHZdVyAPeP1Qg_sjjcGcVy';
+      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ── Icon draw functions ──
-    function drawTiktok(c, s, j) {
-      j = j || 0.6; c.clearRect(0,0,s,s); c.strokeStyle='#fff'; c.lineWidth=1.3; c.lineCap='round'; c.lineJoin='round'
-      sketchPath(c,'M19.59 6.69 C18.39 6.69 17.28 6.19 16.47 5.35 C15.67 4.5 15.2 3.37 15.2 2.12 L12.36 2.12 L12.36 15.26 C12.36 16.75 11.15 17.96 9.66 17.96 C8.17 17.96 6.96 16.75 6.96 15.26 C6.96 13.77 8.17 12.56 9.66 12.56 C9.98 12.56 10.29 12.61 10.57 12.7 L10.57 9.82 C10.27 9.78 9.97 9.76 9.66 9.76 C6.63 9.76 4.17 12.22 4.17 15.25 C4.17 18.28 6.63 20.74 9.66 20.74 C12.69 20.74 15.15 18.28 15.15 15.25 L15.15 8.53 C16.37 9.4 17.89 9.9 19.53 9.9 L19.53 7.06 C19.55 6.85 19.57 6.77 19.59 6.69 Z',s/24,0,0,j)
-    }
-    function drawTwitter(c, s, j) {
-      j = j || 0.6; c.clearRect(0,0,s,s); c.strokeStyle='#fff'; c.lineWidth=1.3; c.lineCap='round'
-      // X shape
-      sketchLine(c,s*.15,s*.15,s*.85,s*.85,j)
-      sketchLine(c,s*.85,s*.15,s*.15,s*.85,j)
-      sketchLine(c,s*.15,s*.15,s*.45,s*.15,j)
-      sketchLine(c,s*.55,s*.85,s*.85,s*.85,j)
-    }
-    function drawInstagram(c, s, j) {
-      j = j || 0.6; c.clearRect(0,0,s,s); c.strokeStyle='#fff'; c.lineWidth=1.3; c.lineCap='round'
-      const m=s*.18,r=s*.12,w=s-m*2
-      // rounded rect
-      c.beginPath()
-      c.moveTo(m+r+(Math.random()-.5)*j,m+(Math.random()-.5)*j)
-      c.lineTo(m+w-r+(Math.random()-.5)*j,m+(Math.random()-.5)*j)
-      c.quadraticCurveTo(m+w+(Math.random()-.5)*j,m+(Math.random()-.5)*j,m+w+(Math.random()-.5)*j,m+r+(Math.random()-.5)*j)
-      c.lineTo(m+w+(Math.random()-.5)*j,m+w-r+(Math.random()-.5)*j)
-      c.quadraticCurveTo(m+w+(Math.random()-.5)*j,m+w+(Math.random()-.5)*j,m+w-r+(Math.random()-.5)*j,m+w+(Math.random()-.5)*j)
-      c.lineTo(m+r+(Math.random()-.5)*j,m+w+(Math.random()-.5)*j)
-      c.quadraticCurveTo(m+(Math.random()-.5)*j,m+w+(Math.random()-.5)*j,m+(Math.random()-.5)*j,m+w-r+(Math.random()-.5)*j)
-      c.lineTo(m+(Math.random()-.5)*j,m+r+(Math.random()-.5)*j)
-      c.quadraticCurveTo(m+(Math.random()-.5)*j,m+(Math.random()-.5)*j,m+r+(Math.random()-.5)*j,m+(Math.random()-.5)*j)
-      c.stroke()
-      // circle
-      const cx=s/2,cy=s/2,cr=w*.28,steps=14
-      c.beginPath()
-      for(let i=0;i<=steps;i++){const a=i/steps*Math.PI*2;i===0?c.moveTo(cx+Math.cos(a)*(cr+(Math.random()-.5)*j),cy+Math.sin(a)*(cr+(Math.random()-.5)*j)):c.lineTo(cx+Math.cos(a)*(cr+(Math.random()-.5)*j),cy+Math.sin(a)*(cr+(Math.random()-.5)*j))}
-      c.stroke()
-      // dot
-      c.beginPath();c.arc(m+w*.78,m+w*.22,s*.04,0,Math.PI*2);c.fillStyle='#fff';c.fill()
-    }
-    function drawLink(c, s, j) {
-      j = j || 0.6; c.clearRect(0,0,s,s); c.strokeStyle='#fff'; c.lineWidth=1.3; c.lineCap='round'
-      // chain link
-      sketchPath(c,`M${s*.38} ${s*.5} C${s*.38} ${s*.3} ${s*.62} ${s*.3} ${s*.62} ${s*.5}`,1,0,0,j)
-      sketchPath(c,`M${s*.38} ${s*.5} C${s*.38} ${s*.7} ${s*.62} ${s*.7} ${s*.62} ${s*.5}`,1,0,0,j)
-      sketchLine(c,s*.28,s*.5,s*.38,s*.5,j)
-      sketchLine(c,s*.62,s*.5,s*.72,s*.5,j)
-    }
-
-    const iconFns = { tiktok: drawTiktok, twitter: drawTwitter, instagram: drawInstagram, link: drawLink }
-
-    function makeSocialIcon(type, href, label) {
-      const a = document.createElement('a')
-      a.className = 'social-icon'
-      a.href = href
-      a.title = label || type
-      const cvs = document.createElement('canvas')
-      cvs.width = 64; cvs.height = 64
-      a.appendChild(cvs)
-      const ctx = cvs.getContext('2d')
-      const fn = iconFns[type] || drawLink
-      fn(ctx, 64, 0.6)
-      let hi = null
-      a.addEventListener('mouseenter', () => { hi = setInterval(() => fn(ctx, 64, 1.8), 100) })
-      a.addEventListener('mouseleave', () => { clearInterval(hi); fn(ctx, 64, 0.6) })
-      a.addEventListener('click', e => {
-        e.preventDefault()
-        document.body.style.transition = 'transform 0.7s cubic-bezier(0.7,0,0.84,0),opacity 0.7s ease'
-        document.body.style.transform = 'translateY(30%)'
-        document.body.style.opacity = '0'
-        setTimeout(() => { window.top.location.href = href }, 700)
-      })
-      return a
-    }
-
-    // ── Player ──
-    let playlist = [], currentTrack = 0, playing = false
-    const playerAudio = document.getElementById('player-audio')
-
-    function loadTrack(i) {
-      currentTrack = ((i % playlist.length) + playlist.length) % playlist.length
-      playerAudio.src = playlist[currentTrack].src
-      startTitleAnim()
-    }
-    function togglePlay() {
-      if (playing) { playerAudio.pause(); playing = false }
-      else { playerAudio.play().catch(() => {}); playing = true }
-      drawPlayPause()
-    }
-    function nextTrack() { loadTrack(currentTrack + 1); playerAudio.play().catch(() => {}); playing = true; drawPlayPause() }
-    function prevTrack() { loadTrack(currentTrack - 1); playerAudio.play().catch(() => {}); playing = true; drawPlayPause() }
-    playerAudio.addEventListener('ended', nextTrack)
-
-    // title scroll
-    const tc = document.getElementById('player-title-canvas').getContext('2d')
-    const TW = 250, TH = 22, TF = '14px "JetBrains Mono",monospace'
-    let ttw = 0, ttext = '', toff = 0, tphase = 'pause-start', tlt = 0, tpe = 0, trf = 0, tre = 0
-    function cubicBezier(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2 }
-    function startTitleAnim() {
-      if (!playlist.length) return
-      ttext = playlist[currentTrack].title; tc.font = TF
-      ttw = Math.ceil(tc.measureText(ttext).width)
-      toff = 0; tphase = 'pause-start'; tpe = 0; tlt = 0
-    }
-    function drawTitle(now) {
-      if (!tlt) tlt = now
-      const dt = Math.min(now - tlt, 50); tlt = now
-      if (ttw > TW) {
-        const ms = ttw - TW
-        if (tphase === 'pause-start') { tpe += dt; if (tpe >= 1500) tphase = 'scroll' }
-        else if (tphase === 'scroll') { toff += 35*(dt/1000); if (toff >= ms) { toff = ms; tphase = 'pause-end'; tpe = 0 } }
-        else if (tphase === 'pause-end') { tpe += dt; if (tpe >= 1500) { tphase = 'reset'; trf = toff; tre = 0 } }
-        else if (tphase === 'reset') { tre += dt; const t = Math.min(1, tre/800); toff = trf*(1-cubicBezier(t)); if (t >= 1) { toff = 0; tphase = 'pause-start'; tpe = 0 } }
-      }
-      tc.clearRect(0,0,TW,TH); tc.save(); tc.beginPath(); tc.rect(0,0,TW,TH); tc.clip()
-      tc.font = TF; tc.textBaseline = 'middle'; tc.fillStyle = 'rgba(255,255,255,0.35)'
-      tc.fillText(ttext, ttw <= TW ? TW - ttw - 1 : -toff, TH/2)
-      tc.restore(); requestAnimationFrame(drawTitle)
-    }
-    requestAnimationFrame(drawTitle)
-
-    // player button draw
-    function drawPlayPause(j) {
-      const cvs = document.getElementById('player-toggle').querySelector('canvas'), c = cvs.getContext('2d'), s = 44
-      j = j || 1; c.clearRect(0,0,s,s); c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.lineCap = 'round'
-      if (playing) { sketchLine(c,s*.33,s*.22,s*.33,s*.78,j); sketchLine(c,s*.67,s*.22,s*.67,s*.78,j) }
-      else { sketchLine(c,s*.28,s*.18,s*.28,s*.82,j); sketchLine(c,s*.28,s*.18,s*.78,s*.5,j); sketchLine(c,s*.78,s*.5,s*.28,s*.82,j) }
-    }
-    function drawPrev(j) {
-      const cvs = document.getElementById('player-prev').querySelector('canvas'), c = cvs.getContext('2d'), s = 40
-      j = j || 1; c.clearRect(0,0,s,s); c.strokeStyle = '#fff'; c.lineWidth = 1.4; c.lineCap = 'round'
-      sketchLine(c,s*.55,s*.22,s*.28,s*.5,j); sketchLine(c,s*.28,s*.5,s*.55,s*.78,j)
-      sketchLine(c,s*.72,s*.22,s*.45,s*.5,j); sketchLine(c,s*.45,s*.5,s*.72,s*.78,j)
-    }
-    function drawNext(j) {
-      const cvs = document.getElementById('player-next').querySelector('canvas'), c = cvs.getContext('2d'), s = 40
-      j = j || 1; c.clearRect(0,0,s,s); c.strokeStyle = '#fff'; c.lineWidth = 1.4; c.lineCap = 'round'
-      sketchLine(c,s*.28,s*.22,s*.55,s*.5,j); sketchLine(c,s*.55,s*.5,s*.28,s*.78,j)
-      sketchLine(c,s*.45,s*.22,s*.72,s*.5,j); sketchLine(c,s*.72,s*.5,s*.45,s*.78,j)
-    }
-    drawPlayPause(); drawPrev(); drawNext()
-
-    document.getElementById('player-toggle').addEventListener('click', togglePlay)
-    document.getElementById('player-prev').addEventListener('click', prevTrack)
-    document.getElementById('player-next').addEventListener('click', nextTrack)
-    ;[{id:'player-prev',fn:drawPrev},{id:'player-toggle',fn:drawPlayPause},{id:'player-next',fn:drawNext}].forEach(({id,fn}) => {
-      const el = document.getElementById(id); let iv = null
-      el.addEventListener('mouseenter', () => { iv = setInterval(() => fn(2.2), 100) })
-      el.addEventListener('mouseleave', () => { clearInterval(iv); fn() })
-    })
-
-    // ── Enter overlay ──
-    const overlay = document.getElementById('enter-overlay')
-    const bgVideo = document.getElementById('bg-video')
-    const eCvs = document.getElementById('enter-text'), eCtx = eCvs.getContext('2d')
-
-    function drawEnterText() {
-      eCtx.clearRect(0,0,280,20)
-      eCtx.font = '12px "JetBrains Mono",monospace'
-      eCtx.textAlign = 'center'; eCtx.textBaseline = 'middle'
-      for (let p = 0; p < 3; p++) {
-        eCtx.fillStyle = 'rgba(255,255,255,' + (0.15 + Math.random() * 0.06) + ')'
-        eCtx.fillText('click to enter', 140 + (Math.random()-.5)*1.2, 10 + (Math.random()-.5)*0.8)
-      }
-    }
-    drawEnterText()
-    const eJitter = setInterval(drawEnterText, 120)
-
-    overlay.addEventListener('click', () => {
-      clearInterval(eJitter)
-      overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none'
-      setTimeout(() => overlay.remove(), 1400)
-
-      if (bgVideo.src) {
-        bgVideo.muted = false; bgVideo.volume = 0.75
-        const vp = bgVideo.play()
-        if (vp) vp.catch(() => { bgVideo.muted = true; bgVideo.play().catch(() => {}) })
-        setTimeout(() => bgVideo.classList.add('visible'), 80)
+      // ── Get slug from ?u= query param ──
+      function getSlug() {
+        const params = new URLSearchParams(location.search);
+        return params.get('u') || null;
       }
 
-      if (playlist.length) {
-        playerAudio.volume = 0
-        playerAudio.play().then(() => {
-          playing = true; drawPlayPause(); startTitleAnim()
-          const start = performance.now()
-          ;(function tick() { const p = Math.min(1,(performance.now()-start)/3000); playerAudio.volume = p*p*0.45; if (p < 1) requestAnimationFrame(tick) })()
-        }).catch(() => {})
+      // ── Sketchy draw utils ──
+      function sketchLine(c, x1, y1, x2, y2, j) {
+        const segs = 4 + Math.floor(Math.random() * 3);
+        c.beginPath();
+        c.moveTo(x1 + (Math.random() - .5) * j, y1 + (Math.random() - .5) * j);
+        for (let i = 1; i <= segs; i++) {
+          const t = i / segs;
+          c.lineTo(x1 + (x2 - x1) * t + (Math.random() - .5) * j, y1 + (y2 - y1) * t + (Math.random() - .5) * j);
+        }
+        c.stroke();
       }
-    })
+      
+      function sketchPath(c, d, sc, ox, oy, j) {
+        const cmds = d.match(/[MLCZ][^MLCZ]*/gi); if (!cmds) return; c.beginPath();
+        for (const cmd of cmds) {
+          const type = cmd[0], nums = cmd.slice(1).trim().split(/[\s,]+/).map(Number);
+          if (type === 'M') c.moveTo(nums[0]*sc+ox+(Math.random()-.5)*j, nums[1]*sc+oy+(Math.random()-.5)*j);
+          else if (type === 'L') c.lineTo(nums[0]*sc+ox+(Math.random()-.5)*j, nums[1]*sc+oy+(Math.random()-.5)*j);
+          else if (type === 'C') { for (let i = 0; i < nums.length; i += 6) c.bezierCurveTo(nums[i]*sc+ox+(Math.random()-.5)*j,nums[i+1]*sc+oy+(Math.random()-.5)*j,nums[i+2]*sc+ox+(Math.random()-.5)*j,nums[i+3]*sc+oy+(Math.random()-.5)*j,nums[i+4]*sc+ox+(Math.random()-.5)*j,nums[i+5]*sc+oy+(Math.random()-.5)*j); }
+          else if (type === 'Z' || type === 'z') c.closePath();
+        }
+        c.stroke();
+      }
 
-    // ── Effects ──
-    function initSnow() {
-      const sc = document.getElementById('effect-canvas'), sctx = sc.getContext('2d')
-      function rsz() { sc.width = window.innerWidth; sc.height = window.innerHeight }
-      rsz(); window.addEventListener('resize', rsz)
-      const flakes = []
-      for (let i = 0; i < 120; i++) flakes.push({ x:Math.random()*window.innerWidth, y:Math.random()*window.innerHeight, r:0.5+Math.random()*2.5, speed:0.3+Math.random()*1, wind:(Math.random()-.5)*0.3, sway:Math.random()*Math.PI*2, swaySpeed:0.005+Math.random()*0.01, swayAmp:0.3+Math.random()*0.6, alpha:0.1+Math.random()*0.25 })
-      function drawSnow() {
-        const W=sc.width,H=sc.height; sctx.clearRect(0,0,W,H)
-        for (const f of flakes) { f.y+=f.speed; f.sway+=f.swaySpeed; f.x+=f.wind+Math.sin(f.sway)*f.swayAmp*0.3; if(f.y>H+5){f.y=-5;f.x=Math.random()*W} if(f.x>W+5)f.x=-5; if(f.x<-5)f.x=W+5; sctx.globalAlpha=f.alpha; sctx.fillStyle='#fff'; sctx.font=`${f.r*5}px monospace`; sctx.textAlign='center'; sctx.textBaseline='middle'; sctx.fillText('*',f.x,f.y) }
-        requestAnimationFrame(drawSnow)
+      // ── Icon draw functions ──
+      function drawTiktok(c, s, j) {
+        j = j || 0.6; c.clearRect(0,0,s,s); c.strokeStyle='#fff'; c.lineWidth=1.3; c.lineCap='round'; c.lineJoin='round';
+        sketchPath(c,'M19.59 6.69 C18.39 6.69 17.28 6.19 16.47 5.35 C15.67 4.5 15.2 3.37 15.2 2.12 L12.36 2.12 L12.36 15.26 C12.36 16.75 11.15 17.96 9.66 17.96 C8.17 17.96 6.96 16.75 6.96 15.26 C6.96 13.77 8.17 12.56 9.66 12.56 C9.98 12.56 10.29 12.61 10.57 12.7 L10.57 9.82 C10.27 9.78 9.97 9.76 9.66 9.76 C6.63 9.76 4.17 12.22 4.17 15.25 C4.17 18.28 6.63 20.74 9.66 20.74 C12.69 20.74 15.15 18.28 15.15 15.25 L15.15 8.53 C16.37 9.4 17.89 9.9 19.53 9.9 L19.53 7.06 C19.55 6.85 19.57 6.77 19.59 6.69 Z',s/24,0,0,j);
       }
-      sc.style.opacity='0'; sc.style.transition='opacity 2s ease'
-      setTimeout(() => { sc.style.opacity='1'; drawSnow() }, 600)
+      
+      function drawTwitter(c, s, j) {
+        j = j || 0.6; c.clearRect(0,0,s,s); c.strokeStyle='#fff'; c.lineWidth=1.3; c.lineCap='round';
+        sketchLine(c,s*.15,s*.15,s*.85,s*.85,j);
+        sketchLine(c,s*.85,s*.15,s*.15,s*.85,j);
+      }
+      
+      function drawInstagram(c, s, j) {
+        j = j || 0.6; c.clearRect(0,0,s,s); c.strokeStyle='#fff'; c.lineWidth=1.3; c.lineCap='round';
+        const m=s*.18,r=s*.12,w=s-m*2;
+        c.beginPath();
+        c.moveTo(m+r+(Math.random()-.5)*j,m+(Math.random()-.5)*j);
+        c.lineTo(m+w-r+(Math.random()-.5)*j,m+(Math.random()-.5)*j);
+        c.quadraticCurveTo(m+w+(Math.random()-.5)*j,m+(Math.random()-.5)*j,m+w+(Math.random()-.5)*j,m+r+(Math.random()-.5)*j);
+        c.lineTo(m+w+(Math.random()-.5)*j,m+w-r+(Math.random()-.5)*j);
+        c.quadraticCurveTo(m+w+(Math.random()-.5)*j,m+w+(Math.random()-.5)*j,m+w-r+(Math.random()-.5)*j,m+w+(Math.random()-.5)*j);
+        c.lineTo(m+r+(Math.random()-.5)*j,m+w+(Math.random()-.5)*j);
+        c.quadraticCurveTo(m+(Math.random()-.5)*j,m+w+(Math.random()-.5)*j,m+(Math.random()-.5)*j,m+w-r+(Math.random()-.5)*j);
+        c.lineTo(m+(Math.random()-.5)*j,m+r+(Math.random()-.5)*j);
+        c.quadraticCurveTo(m+(Math.random()-.5)*j,m+(Math.random()-.5)*j,m+r+(Math.random()-.5)*j,m+(Math.random()-.5)*j);
+        c.stroke();
+        const cx=s/2,cy=s/2,cr=w*.28,steps=14;
+        c.beginPath();
+        for(let i=0;i<=steps;i++){const a=i/steps*Math.PI*2;i===0?c.moveTo(cx+Math.cos(a)*(cr+(Math.random()-.5)*j),cy+Math.sin(a)*(cr+(Math.random()-.5)*j)):c.lineTo(cx+Math.cos(a)*(cr+(Math.random()-.5)*j),cy+Math.sin(a)*(cr+(Math.random()-.5)*j));}
+        c.stroke();
+        c.beginPath();c.arc(m+w*.78,m+w*.22,s*.04,0,Math.PI*2);c.fillStyle='#fff';c.fill();
+      }
+      
+      function drawLink(c, s, j) {
+        j = j || 0.6; c.clearRect(0,0,s,s); c.strokeStyle='#fff'; c.lineWidth=1.3; c.lineCap='round';
+        sketchPath(c,`M${s*.38} ${s*.5} C${s*.38} ${s*.3} ${s*.62} ${s*.3} ${s*.62} ${s*.5}`,1,0,0,j);
+        sketchPath(c,`M${s*.38} ${s*.5} C${s*.38} ${s*.7} ${s*.62} ${s*.7} ${s*.62} ${s*.5}`,1,0,0,j);
+        sketchLine(c,s*.28,s*.5,s*.38,s*.5,j);
+        sketchLine(c,s*.62,s*.5,s*.72,s*.5,j);
+      }
+
+      const iconFns = { tiktok: drawTiktok, twitter: drawTwitter, instagram: drawInstagram, link: drawLink };
+
+      function makeSocialIcon(type, href, label) {
+        const a = document.createElement('a');
+        a.className = 'social-icon';
+        a.href = href;
+        a.title = label || type;
+        const cvs = document.createElement('canvas');
+        cvs.width = 64; cvs.height = 64;
+        a.appendChild(cvs);
+        const ctx = cvs.getContext('2d');
+        const fn = iconFns[type] || drawLink;
+        fn(ctx, 64, 0.6);
+        let hi = null;
+        a.addEventListener('mouseenter', () => { hi = setInterval(() => fn(ctx, 64, 1.8), 100); });
+        a.addEventListener('mouseleave', () => { clearInterval(hi); fn(ctx, 64, 0.6); });
+        a.addEventListener('click', e => {
+          e.preventDefault();
+          document.body.style.transition = 'transform 0.7s cubic-bezier(0.7,0,0.84,0),opacity 0.7s ease';
+          document.body.style.transform = 'translateY(30%)';
+          document.body.style.opacity = '0';
+          setTimeout(() => { window.top.location.href = href; }, 700);
+        });
+        return a;
+      }
+
+      // ── Player ──
+      let playlist = [], currentTrack = 0, playing = false;
+      const playerAudio = document.getElementById('player-audio');
+
+      function loadTrack(i) {
+        if (!playlist.length) return;
+        currentTrack = ((i % playlist.length) + playlist.length) % playlist.length;
+        playerAudio.src = playlist[currentTrack].src;
+        startTitleAnim();
+      }
+      
+      function togglePlay() {
+        if (playing) { playerAudio.pause(); playing = false; }
+        else { playerAudio.play().catch(() => {}); playing = true; }
+        drawPlayPause();
+      }
+      
+      function nextTrack() { loadTrack(currentTrack + 1); playerAudio.play().catch(() => {}); playing = true; drawPlayPause(); }
+      function prevTrack() { loadTrack(currentTrack - 1); playerAudio.play().catch(() => {}); playing = true; drawPlayPause(); }
+      if (playerAudio) playerAudio.addEventListener('ended', nextTrack);
+
+      // title scroll
+      const tc = document.getElementById('player-title-canvas')?.getContext('2d');
+      const TW = 250, TH = 22, TF = '14px "JetBrains Mono",monospace';
+      let ttw = 0, ttext = '', toff = 0, tphase = 'pause-start', tlt = 0, tpe = 0, trf = 0, tre = 0;
+      
+      function cubicBezier(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
+      
+      function startTitleAnim() {
+        if (!playlist.length || !tc) return;
+        ttext = playlist[currentTrack].title; tc.font = TF;
+        ttw = Math.ceil(tc.measureText(ttext).width);
+        toff = 0; tphase = 'pause-start'; tpe = 0; tlt = 0;
+      }
+      
+      function drawTitle(now) {
+        if (!tc) return;
+        if (!tlt) tlt = now;
+        const dt = Math.min(now - tlt, 50); tlt = now;
+        if (ttw > TW) {
+          const ms = ttw - TW;
+          if (tphase === 'pause-start') { tpe += dt; if (tpe >= 1500) tphase = 'scroll'; }
+          else if (tphase === 'scroll') { toff += 35*(dt/1000); if (toff >= ms) { toff = ms; tphase = 'pause-end'; tpe = 0; } }
+          else if (tphase === 'pause-end') { tpe += dt; if (tpe >= 1500) { tphase = 'reset'; trf = toff; tre = 0; } }
+          else if (tphase === 'reset') { tre += dt; const t = Math.min(1, tre/800); toff = trf*(1-cubicBezier(t)); if (t >= 1) { toff = 0; tphase = 'pause-start'; tpe = 0; } }
+        }
+        tc.clearRect(0,0,TW,TH); tc.save(); tc.beginPath(); tc.rect(0,0,TW,TH); tc.clip();
+        tc.font = TF; tc.textBaseline = 'middle'; tc.fillStyle = 'rgba(255,255,255,0.35)';
+        tc.fillText(ttext, ttw <= TW ? TW - ttw - 1 : -toff, TH/2);
+        tc.restore(); requestAnimationFrame(drawTitle);
+      }
+      requestAnimationFrame(drawTitle);
+
+      // player button draw
+      function drawPlayPause(j) {
+        const btn = document.getElementById('player-toggle');
+        if (!btn) return;
+        const cvs = btn.querySelector('canvas');
+        if (!cvs) return;
+        const c = cvs.getContext('2d'), s = 44;
+        j = j || 1; c.clearRect(0,0,s,s); c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.lineCap = 'round';
+        if (playing) { sketchLine(c,s*.33,s*.22,s*.33,s*.78,j); sketchLine(c,s*.67,s*.22,s*.67,s*.78,j); }
+        else { sketchLine(c,s*.28,s*.18,s*.28,s*.82,j); sketchLine(c,s*.28,s*.18,s*.78,s*.5,j); sketchLine(c,s*.78,s*.5,s*.28,s*.82,j); }
+      }
+      
+      function drawPrev(j) {
+        const btn = document.getElementById('player-prev');
+        if (!btn) return;
+        const cvs = btn.querySelector('canvas');
+        if (!cvs) return;
+        const c = cvs.getContext('2d'), s = 40;
+        j = j || 1; c.clearRect(0,0,s,s); c.strokeStyle = '#fff'; c.lineWidth = 1.4; c.lineCap = 'round';
+        sketchLine(c,s*.55,s*.22,s*.28,s*.5,j); sketchLine(c,s*.28,s*.5,s*.55,s*.78,j);
+        sketchLine(c,s*.72,s*.22,s*.45,s*.5,j); sketchLine(c,s*.45,s*.5,s*.72,s*.78,j);
+      }
+      
+      function drawNext(j) {
+        const btn = document.getElementById('player-next');
+        if (!btn) return;
+        const cvs = btn.querySelector('canvas');
+        if (!cvs) return;
+        const c = cvs.getContext('2d'), s = 40;
+        j = j || 1; c.clearRect(0,0,s,s); c.strokeStyle = '#fff'; c.lineWidth = 1.4; c.lineCap = 'round';
+        sketchLine(c,s*.28,s*.22,s*.55,s*.5,j); sketchLine(c,s*.55,s*.5,s*.28,s*.78,j);
+        sketchLine(c,s*.45,s*.22,s*.72,s*.5,j); sketchLine(c,s*.72,s*.5,s*.45,s*.78,j);
+      }
+
+      // Attach player event listeners
+      const toggleBtn = document.getElementById('player-toggle');
+      const prevBtn = document.getElementById('player-prev');
+      const nextBtn = document.getElementById('player-next');
+      
+      if (toggleBtn) toggleBtn.addEventListener('click', togglePlay);
+      if (prevBtn) prevBtn.addEventListener('click', prevTrack);
+      if (nextBtn) nextBtn.addEventListener('click', nextTrack);
+      
+      [{id:'player-prev',fn:drawPrev},{id:'player-toggle',fn:drawPlayPause},{id:'player-next',fn:drawNext}].forEach(({id,fn}) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        let iv = null;
+        el.addEventListener('mouseenter', () => { iv = setInterval(() => fn(2.2), 100); });
+        el.addEventListener('mouseleave', () => { clearInterval(iv); fn(); });
+      });
+
+      // ── Enter overlay ──
+      const overlay = document.getElementById('enter-overlay');
+      const bgVideo = document.getElementById('bg-video');
+      const eCvs = document.getElementById('enter-text');
+      
+      if (eCvs) {
+        const eCtx = eCvs.getContext('2d');
+        function drawEnterText() {
+          eCtx.clearRect(0,0,280,20);
+          eCtx.font = '12px "JetBrains Mono",monospace';
+          eCtx.textAlign = 'center'; eCtx.textBaseline = 'middle';
+          for (let p = 0; p < 3; p++) {
+            eCtx.fillStyle = 'rgba(255,255,255,' + (0.15 + Math.random() * 0.06) + ')';
+            eCtx.fillText('click to enter', 140 + (Math.random()-.5)*1.2, 10 + (Math.random()-.5)*0.8);
+          }
+        }
+        drawEnterText();
+        const eJitter = setInterval(drawEnterText, 120);
+        
+        if (overlay) {
+          overlay.addEventListener('click', () => {
+            clearInterval(eJitter);
+            overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none';
+            setTimeout(() => overlay.remove(), 1400);
+
+            if (bgVideo && bgVideo.src) {
+              bgVideo.muted = false; bgVideo.volume = 0.75;
+              const vp = bgVideo.play();
+              if (vp) vp.catch(() => { bgVideo.muted = true; bgVideo.play().catch(() => {}); });
+              setTimeout(() => bgVideo.classList.add('visible'), 80);
+            }
+
+            if (playlist.length && playerAudio) {
+              playerAudio.volume = 0;
+              playerAudio.play().then(() => {
+                playing = true; drawPlayPause(); startTitleAnim();
+                const start = performance.now();
+                (function tick() { const p = Math.min(1,(performance.now()-start)/3000); playerAudio.volume = p*p*0.45; if (p < 1) requestAnimationFrame(tick); })();
+              }).catch(() => {});
+            }
+          });
+        }
+      }
+
+      // ── Effects ──
+      function initSnow() {
+        const sc = document.getElementById('effect-canvas');
+        if (!sc) return;
+        const sctx = sc.getContext('2d');
+        function rsz() { sc.width = window.innerWidth; sc.height = window.innerHeight; }
+        rsz(); window.addEventListener('resize', rsz);
+        const flakes = [];
+        for (let i = 0; i < 120; i++) flakes.push({ x:Math.random()*window.innerWidth, y:Math.random()*window.innerHeight, r:0.5+Math.random()*2.5, speed:0.3+Math.random()*1, wind:(Math.random()-.5)*0.3, sway:Math.random()*Math.PI*2, swaySpeed:0.005+Math.random()*0.01, swayAmp:0.3+Math.random()*0.6, alpha:0.1+Math.random()*0.25 });
+        function drawSnow() {
+          const W=sc.width,H=sc.height; sctx.clearRect(0,0,W,H);
+          for (const f of flakes) { f.y+=f.speed; f.sway+=f.swaySpeed; f.x+=f.wind+Math.sin(f.sway)*f.swayAmp*0.3; if(f.y>H+5){f.y=-5;f.x=Math.random()*W;} if(f.x>W+5)f.x=-5; if(f.x<-5)f.x=W+5; sctx.globalAlpha=f.alpha; sctx.fillStyle='#fff'; sctx.font=`${f.r*5}px monospace`; sctx.textAlign='center'; sctx.textBaseline='middle'; sctx.fillText('*',f.x,f.y); }
+          requestAnimationFrame(drawSnow);
+        }
+        sc.style.opacity='0'; sc.style.transition='opacity 2s ease';
+        setTimeout(() => { sc.style.opacity='1'; drawSnow(); }, 600);
+      }
+
+      function initCrossCursor() {
+        const SZ=32,FR=4,PX=2,cv=document.createElement('canvas');
+        cv.width=SZ; cv.height=SZ; const cx=cv.getContext('2d');
+        const cr=['...............','.......'+'#'+'.......','.......#.......','.......'+'#'+'.......','.......#.......','.......'+'#'+'.......','.......#.......','.......'+'#'+'.......','.......#.......','.......'+'#'+'.......','....#######....','.......'+'#'+'.......','.......#.......','.......'+'#'+'.......','.......#.......'];
+        function df(f) {
+          cx.clearRect(0,0,SZ,SZ); const p=0.7+0.2*Math.sin(f*Math.PI/2);
+          for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(cr[y]&&cr[y][x]==='#'){cx.fillStyle='rgba(0,0,0,0.7)';cx.fillRect(x*PX-1,y*PX,PX+2,PX+2);cx.fillRect(x*PX,y*PX-1,PX+2,PX+2);}
+          for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(cr[y]&&cr[y][x]==='#'){cx.fillStyle='rgba(255,255,255,'+p+')';cx.fillRect(x*PX+1,y*PX+1,PX,PX);}
+          return cv.toDataURL('image/png');
+        }
+        const fs=[]; for(let i=0;i<FR;i++) fs.push(df(i)); let cur=0;
+        function ap() { document.body.style.cursor='url('+fs[cur]+') 15 21, crosshair'; cur=(cur+1)%FR; }
+        ap(); setInterval(ap,250);
+      }
+
+      function initSparkle() {
+        const N=50; let smx=400,smy=300,osmx=400,osmy=300;
+        const stars=[],tiny=[],sv=[],tv=[],ssx=[],ssy=[],ttx=[],tty=[];
+        function mkDiv(w,h){const d=document.createElement('div');d.style.cssText=`position:absolute;width:${w}px;height:${h}px;overflow:hidden;pointer-events:none`;return d;}
+        for(let i=0;i<N;i++){
+          const t=mkDiv(3,3);t.style.visibility='hidden';t.style.zIndex='9999';document.body.appendChild(t);tiny.push(t);sv[i]=0;tv[i]=0;
+          const s=mkDiv(5,5);s.style.cssText+=';background:transparent;visibility:hidden;z-index:9999';
+          const h=mkDiv(5,1),v=mkDiv(1,5);h.style.cssText+='top:2px;left:0';v.style.cssText+='top:0;left:2px';
+          s.appendChild(h);s.appendChild(v);document.body.appendChild(s);stars.push(s);
+        }
+        document.addEventListener('mousemove',e=>{smx=e.pageX;smy=e.pageY;});
+        function sparkle(){
+          if(Math.abs(smx-osmx)>1||Math.abs(smy-osmy)>1){osmx=smx;osmy=smy;for(let i=0;i<N;i++){if(!sv[i]){stars[i].style.left=(ssx[i]=smx)+'px';stars[i].style.top=(ssy[i]=smy)+'px';stars[i].style.clip='rect(0px,5px,5px,0px)';stars[i].childNodes[0].style.backgroundColor='white';stars[i].childNodes[1].style.backgroundColor='white';stars[i].style.visibility='visible';sv[i]=50;break;}}}
+          for(let i=0;i<N;i++){if(sv[i])uStar(i);if(tv[i])uTiny(i);}
+          setTimeout(sparkle,40);
+        }
+        function uStar(i){if(--sv[i]===25)stars[i].style.clip='rect(1px,4px,4px,1px)';if(sv[i]){ssy[i]+=1+Math.random()*3;ssx[i]+=(i%5-2)/5;if(ssy[i]<document.documentElement.scrollHeight){stars[i].style.top=ssy[i]+'px';stars[i].style.left=ssx[i]+'px';}else{stars[i].style.visibility='hidden';sv[i]=0;return;}}else{tv[i]=50;tiny[i].style.top=(tty[i]=ssy[i])+'px';tiny[i].style.left=(ttx[i]=ssx[i])+'px';tiny[i].style.width='2px';tiny[i].style.height='2px';tiny[i].style.backgroundColor='white';stars[i].style.visibility='hidden';tiny[i].style.visibility='visible';}}
+        function uTiny(i){if(--tv[i]===25){tiny[i].style.width='1px';tiny[i].style.height='1px';}if(tv[i]){tty[i]+=1+Math.random()*3;ttx[i]+=(i%5-2)/5;if(tty[i]<document.documentElement.scrollHeight){tiny[i].style.top=tty[i]+'px';tiny[i].style.left=ttx[i]+'px';}else{tiny[i].style.visibility='hidden';tv[i]=0;return;}}else tiny[i].style.visibility='hidden';}
+        sparkle();
+      }
+
+      // ── Discord avatar fetch ──
+      async function fetchDiscordAvatar(discordId) {
+        const apis = [
+          { url: `https://japi.rest/discord/v1/user/${discordId}`, parse: j => ({ av: j.data?.avatar, name: j.data?.username }) },
+          { url: `https://discordlookup.mesalytic.moe/v1/user/${discordId}`, parse: j => ({ av: j.avatar?.id, name: j.global_name || j.username }) },
+        ];
+        for (const api of apis) {
+          try {
+            const res = await fetch(api.url); if (!res.ok) continue;
+            const json = await res.json(); const { av, name } = api.parse(json);
+            if (av) return { src: `https://cdn.discordapp.com/avatars/${discordId}/${av}.${av.startsWith('a_')?'gif':'png'}?size=256`, name };
+          } catch(e) {}
+        }
+        return null;
+      }
+
+      // ── MAIN: load profile from Supabase ──
+      async function loadProfile() {
+        const slug = getSlug();
+        console.log('Loading profile for slug:', slug);
+        
+        if (!slug) { show404(); return; }
+
+        const { data, error } = await sb.from('profiles').select('*').eq('slug', slug).maybeSingle();
+        console.log('Supabase response:', { data, error });
+        
+        if (error || !data) { 
+          console.error('Profile not found:', error);
+          show404(); 
+          return; 
+        }
+
+        // Hide loading
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) loadingEl.style.display = 'none';
+
+        // Title
+        document.title = (data.display_name || slug) + ' — lies.lat';
+
+        // PFP
+        const pfpImg = document.getElementById('pfp-img');
+        if (pfpImg && data.discord_id) {
+          const dc = await fetchDiscordAvatar(data.discord_id);
+          if (dc && dc.src) pfpImg.src = dc.src;
+          else if (data.avatar_url) pfpImg.src = data.avatar_url;
+        } else if (pfpImg && data.avatar_url) {
+          pfpImg.src = data.avatar_url;
+        }
+
+        // BG video
+        if (bgVideo && data.bg_video) {
+          bgVideo.src = data.bg_video;
+        }
+
+        // Playlist — supports both stored URLs and Supabase Storage public URLs
+        if (data.tracks && data.tracks.length) {
+          playlist = data.tracks.map(t => ({
+            title: t.title || 'untitled',
+            src: t.src && t.src.startsWith('http') ? t.src : (sb.storage.from('audio').getPublicUrl(t.src || '').data?.publicUrl || '')
+          })).filter(t => t.src);
+          
+          if (playlist.length && playerAudio) {
+            playerAudio.src = playlist[0].src;
+            const playerEl = document.getElementById('player');
+            if (playerEl) playerEl.style.display = 'flex';
+            startTitleAnim();
+          }
+        }
+
+        // Socials
+        const sw = document.getElementById('socials-wrap');
+        if (sw) {
+          sw.innerHTML = '';
+          const s = data.socials || {};
+          if (s.tiktok)    sw.appendChild(makeSocialIcon('tiktok', s.tiktok));
+          if (s.twitter)   sw.appendChild(makeSocialIcon('twitter', s.twitter));
+          if (s.instagram) sw.appendChild(makeSocialIcon('instagram', s.instagram));
+          if (s.link)      sw.appendChild(makeSocialIcon('link', s.link, s.link_label));
+        }
+
+        // Effects
+        const fx = data.effects || { snow: true, sparkle: true, crossCursor: true };
+        if (fx.snow) initSnow();
+        if (fx.crossCursor) initCrossCursor();
+        if (fx.sparkle) initSparkle();
+      }
+
+      function show404() {
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) loadingEl.style.display = 'none';
+        
+        const enterOverlay = document.getElementById('enter-overlay');
+        if (enterOverlay) enterOverlay.style.display = 'none';
+        
+        const pfpWrap = document.querySelector('.pfp-wrap');
+        if (pfpWrap) pfpWrap.style.display = 'none';
+        
+        const socialsWrap = document.getElementById('socials-wrap');
+        if (socialsWrap) socialsWrap.style.display = 'none';
+        
+        const player = document.getElementById('player');
+        if (player) player.style.display = 'none';
+        
+        const notFound = document.getElementById('not-found');
+        if (notFound) notFound.style.display = 'flex';
+      }
+
+      loadProfile();
     }
 
-    function initRain() {
-      const sc = document.getElementById('effect-canvas'), sctx = sc.getContext('2d')
-      function rsz() { sc.width = window.innerWidth; sc.height = window.innerHeight }
-      rsz(); window.addEventListener('resize', rsz)
-      const drops = []
-      for (let i = 0; i < 200; i++) drops.push({ x:Math.random()*window.innerWidth, y:Math.random()*window.innerHeight, len:10+Math.random()*20, speed:8+Math.random()*6, alpha:0.05+Math.random()*0.12 })
-      function drawRain() {
-        const W=sc.width,H=sc.height; sctx.clearRect(0,0,W,H)
-        for (const d of drops) { sctx.globalAlpha=d.alpha; sctx.strokeStyle='#adf'; sctx.lineWidth=0.5; sctx.beginPath(); sctx.moveTo(d.x,d.y); sctx.lineTo(d.x-d.len*.15,d.y+d.len); sctx.stroke(); d.y+=d.speed; d.x-=d.speed*.15; if(d.y>H){d.y=-20;d.x=Math.random()*W} }
-        requestAnimationFrame(drawRain)
-      }
-      sc.style.opacity='0'; sc.style.transition='opacity 2s ease'
-      setTimeout(() => { sc.style.opacity='1'; drawRain() }, 600)
-    }
-
-    function initCrossCursor() {
-      const SZ=32,FR=4,PX=2,cv=document.createElement('canvas')
-      cv.width=SZ; cv.height=SZ; const cx=cv.getContext('2d')
-      const cr=['...............','.......'+'#'+'.......','.......#.......','.......'+'#'+'.......','.......#.......','.......'+'#'+'.......','.......#.......','.......'+'#'+'.......','.......#.......','.......'+'#'+'.......',`....#######....`,'.......'+'#'+'.......','.......#.......','.......'+'#'+'.......','.......#.......']
-      function df(f) {
-        cx.clearRect(0,0,SZ,SZ); const p=0.7+0.2*Math.sin(f*Math.PI/2)
-        for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(cr[y]&&cr[y][x]==='#'){cx.fillStyle='rgba(0,0,0,0.7)';cx.fillRect(x*PX-1,y*PX,PX+2,PX+2);cx.fillRect(x*PX,y*PX-1,PX+2,PX+2)}
-        for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(cr[y]&&cr[y][x]==='#'){cx.fillStyle='rgba(255,255,255,'+p+')';cx.fillRect(x*PX+1,y*PX+1,PX,PX)}
-        return cv.toDataURL('image/png')
-      }
-      const fs=[]; for(let i=0;i<FR;i++) fs.push(df(i)); let cur=0
-      function ap() { document.body.style.cursor='url('+fs[cur]+') 15 21, crosshair'; cur=(cur+1)%FR }
-      ap(); setInterval(ap,250)
-    }
-
-    function initSparkle() {
-      const N=50; let smx=400,smy=300,osmx=400,osmy=300
-      const stars=[],tiny=[],sv=[],tv=[],ssx=[],ssy=[],ttx=[],tty=[]
-      function mkDiv(w,h){const d=document.createElement('div');d.style.cssText=`position:absolute;width:${w}px;height:${h}px;overflow:hidden;pointer-events:none`;return d}
-      for(let i=0;i<N;i++){
-        const t=mkDiv(3,3);t.style.visibility='hidden';t.style.zIndex='9999';document.body.appendChild(t);tiny.push(t);sv[i]=0;tv[i]=0
-        const s=mkDiv(5,5);s.style.cssText+=';background:transparent;visibility:hidden;z-index:9999'
-        const h=mkDiv(5,1),v=mkDiv(1,5);h.style.cssText+='top:2px;left:0';v.style.cssText+='top:0;left:2px'
-        s.appendChild(h);s.appendChild(v);document.body.appendChild(s);stars.push(s)
-      }
-      document.addEventListener('mousemove',e=>{smx=e.pageX;smy=e.pageY})
-      function sparkle(){
-        if(Math.abs(smx-osmx)>1||Math.abs(smy-osmy)>1){osmx=smx;osmy=smy;for(let i=0;i<N;i++){if(!sv[i]){stars[i].style.left=(ssx[i]=smx)+'px';stars[i].style.top=(ssy[i]=smy)+'px';stars[i].style.clip='rect(0px,5px,5px,0px)';stars[i].childNodes[0].style.backgroundColor='white';stars[i].childNodes[1].style.backgroundColor='white';stars[i].style.visibility='visible';sv[i]=50;break}}}
-        for(let i=0;i<N;i++){if(sv[i])uStar(i);if(tv[i])uTiny(i)}
-        setTimeout(sparkle,40)
-      }
-      function uStar(i){if(--sv[i]===25)stars[i].style.clip='rect(1px,4px,4px,1px)';if(sv[i]){ssy[i]+=1+Math.random()*3;ssx[i]+=(i%5-2)/5;if(ssy[i]<document.documentElement.scrollHeight){stars[i].style.top=ssy[i]+'px';stars[i].style.left=ssx[i]+'px'}else{stars[i].style.visibility='hidden';sv[i]=0;return}}else{tv[i]=50;tiny[i].style.top=(tty[i]=ssy[i])+'px';tiny[i].style.left=(ttx[i]=ssx[i])+'px';tiny[i].style.width='2px';tiny[i].style.height='2px';tiny[i].style.backgroundColor='white';stars[i].style.visibility='hidden';tiny[i].style.visibility='visible'}}
-      function uTiny(i){if(--tv[i]===25){tiny[i].style.width='1px';tiny[i].style.height='1px'}if(tv[i]){tty[i]+=1+Math.random()*3;ttx[i]+=(i%5-2)/5;if(tty[i]<document.documentElement.scrollHeight){tiny[i].style.top=tty[i]+'px';tiny[i].style.left=ttx[i]+'px'}else{tiny[i].style.visibility='hidden';tv[i]=0;return}}else tiny[i].style.visibility='hidden'}
-      sparkle()
-    }
-
-    // ── Discord avatar fetch ──
-    async function fetchDiscordAvatar(discordId) {
-      const apis = [
-        { url: `https://japi.rest/discord/v1/user/${discordId}`, parse: j => ({ av: j.data?.avatar, name: j.data?.username }) },
-        { url: `https://discordlookup.mesalytic.moe/v1/user/${discordId}`, parse: j => ({ av: j.avatar?.id, name: j.global_name || j.username }) },
-      ]
-      for (const api of apis) {
-        try {
-          const res = await fetch(api.url); if (!res.ok) continue
-          const json = await res.json(); const { av, name } = api.parse(json)
-          if (av) return { src: `https://cdn.discordapp.com/avatars/${discordId}/${av}.${av.startsWith('a_')?'gif':'png'}?size=256`, name }
-        } catch(e) {}
-      }
-      return null
-    }
-
-    // ── MAIN: load profile from Supabase ──
-    async function loadProfile() {
-      const slug = getSlug()
-      if (!slug) { show404(); return }
-
-      const { data, error } = await sb.from('profiles').select('*').eq('slug', slug).maybeSingle()
-      if (error || !data) { show404(); return }
-
-      // Title
-      document.title = (data.display_name || slug) + ' — lies.lat'
-
-      // PFP
-      const pfpImg = document.getElementById('pfp-img')
-      if (data.discord_id) {
-        const dc = await fetchDiscordAvatar(data.discord_id)
-        if (dc) pfpImg.src = dc.src
-        else if (data.avatar_url) pfpImg.src = data.avatar_url
-      } else if (data.avatar_url) {
-        pfpImg.src = data.avatar_url
-      }
-
-      // BG video
-      if (data.bg_video) {
-        bgVideo.src = data.bg_video
-      }
-
-      // Playlist — supports both stored URLs and Supabase Storage public URLs
-      if (data.tracks && data.tracks.length) {
-        playlist = data.tracks.map(t => ({
-          title: t.title,
-          // if src starts with http use as-is, otherwise build Supabase storage URL
-          src: t.src.startsWith('http') ? t.src : sb.storage.from('audio').getPublicUrl(t.src).data.publicUrl
-        }))
-        playerAudio.src = playlist[0].src
-        document.getElementById('player').style.display = 'flex'
-        startTitleAnim()
-      }
-
-      // Socials
-      const sw = document.getElementById('socials-wrap')
-      const s = data.socials || {}
-      if (s.tiktok)    sw.appendChild(makeSocialIcon('tiktok', s.tiktok))
-      if (s.twitter)   sw.appendChild(makeSocialIcon('twitter', s.twitter))
-      if (s.instagram) sw.appendChild(makeSocialIcon('instagram', s.instagram))
-      if (s.link)      sw.appendChild(makeSocialIcon('link', s.link, s.link_label))
-
-      // Effects
-      const fx = data.effects || { snow: true, sparkle: true, crossCursor: true }
-      if (fx.rain)        initRain()
-      else if (fx.snow)   initSnow()
-      if (fx.crossCursor) initCrossCursor()
-      if (fx.sparkle)     initSparkle()
-    }
-
-    function show404() {
-      document.getElementById('enter-overlay').style.display = 'none'
-      document.querySelector('.pfp-wrap').style.display = 'none'
-      document.getElementById('socials-wrap').style.display = 'none'
-      document.getElementById('player').style.display = 'none'
-      document.getElementById('not-found').style.display = 'flex'
-    }
-
-    loadProfile()
+    // Start the app
+    initApp();
   </script>
 </body>
 </html>
