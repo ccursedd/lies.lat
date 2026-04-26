@@ -1,25 +1,16 @@
 {
   "rewrites": [
     {
-      "source": "/fav/:path*",
-      "destination": "/fav/:path*"
-    },
-    {
       "source": "/admin",
       "destination": "/admin.html"
     },
     {
-      "source": "/admin.html",
-      "destination": "/admin.html"
+      "source": "/fav/:path*",
+      "destination": "/fav/:path*"
     },
     {
-      "source": "/profile.html",
-      "destination": "/profile.html"
-    },
-    {
-      "source": "/:path*",
-      "destination": "/profile.html"
+      "source": "/([^/]+)",
+      "destination": "/profile.html?slug=$1"
     }
-  ],
-  "cleanUrls": true
+  ]
 }
