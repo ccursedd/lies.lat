@@ -5,23 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>lies.lat</title>
   <script>
-    // GitHub Pages SPA routing — redirect /u/slug to /?u=slug
+    // GitHub Pages SPA routing — redirect /slug to /profile.html?u=slug
     // This 404.html catches all unknown paths and redirects to index with query param
-    const path = window.location.pathname
-    const parts = path.split('/').filter(Boolean)
-
-    // If it's /u/something or /something, redirect to profile.html?u=something
-    if (parts.length >= 1) {
-      const slug = parts[0] === 'u' ? parts[1] : parts[0]
-      if (slug && slug !== 'admin') {
-        window.location.replace('/profile.html?u=' + slug)
-      } else {
-        window.location.replace('/')
-      }
-    } else {
-      window.location.replace('/')
+    
+    // Get the current path
+    let path = window.location.pathname;
+    
+    // Remove leading/trailing slashes and split
+    let slug = path.replace(/^\/|\/$/g, '');
+    
+    // If it's empty (just "/"), go to main site
+    if (!slug || slug === '' || slug === 'index.html') {
+      window.location.replace('/');
+    } 
+    // If it's "admin" or "profile.html", don't redirect
+    else if (slug === 'admin' || slug === 'admin.html' || slug === 'profile.html') {
+      // Do nothing, let the page load normally
+    }
+    // Otherwise, treat the slug as a username and redirect to profile
+    else {
+      // Remove any query parameters or hash if present
+      slug = slug.split('?')[0].split('#')[0];
+      // Redirect to profile page with the slug
+      window.location.replace('/profile.html?u=' + slug);
     }
   </script>
 </head>
-<body></body>
+<body>
+  <!-- Optional: Show a loading message while redirecting -->
+  <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: #000; color: #fff; font-family: monospace;">
+    Loading...
+  </div>
+</body>
 </html>
