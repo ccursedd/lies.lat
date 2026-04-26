@@ -58,7 +58,6 @@
     .social-icon:hover { opacity: 0.6; transform: translateY(-2px); }
     .social-icon canvas { display: block; }
 
-    /* 404 */
     #not-found {
       display: none; position: fixed; inset: 0;
       align-items: center; justify-content: center; flex-direction: column; gap: 12px;
@@ -67,7 +66,6 @@
       z-index: 100;
     }
     
-    /* Loading state */
     #loading {
       display: flex; position: fixed; inset: 0;
       align-items: center; justify-content: center;
@@ -75,6 +73,7 @@
       color: rgba(255,255,255,0.2);
       font-size: 11px; letter-spacing: 2px;
       z-index: 100;
+      background: #000;
     }
   </style>
 </head>
@@ -115,6 +114,31 @@
   </div>
 
   <script>
+    // Get the user slug from URL - supports Vercel clean URLs
+    function getUserSlug() {
+      // Check query parameter first (from Vercel rewrite)
+      let urlParams = new URLSearchParams(window.location.search);
+      let slug = urlParams.get('u');
+      
+      // If no query param, check the path for clean URL
+      if (!slug) {
+        let path = window.location.pathname;
+        slug = path.replace(/^\/|\/$/g, '');
+      }
+      
+      // If still no slug, check hash (fallback for GitHub Pages)
+      if (!slug && window.location.hash && window.location.hash.length > 1) {
+        slug = window.location.hash.substring(1);
+      }
+      
+      // Filter out reserved paths
+      if (!slug || slug === '' || slug === 'index.html' || slug === 'admin' || slug === 'admin.html' || slug === 'profile.html' || slug === 'favicon.ico' || slug.startsWith('fav/')) {
+        return null;
+      }
+      
+      return slug;
+    }
+
     // Wait for Supabase to be available
     function initApp() {
       if (typeof supabase === 'undefined') {
@@ -128,12 +152,6 @@
       const SUPABASE_URL = 'https://dyxxpuirsuqtuehvijdf.supabase.co';
       const SUPABASE_KEY = 'sb_publishable_8IaNO6bOuQHZdVyAPeP1Qg_sjjcGcVy';
       const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-      // ── Get slug from ?u= query param ──
-      function getSlug() {
-        const params = new URLSearchParams(location.search);
-        return params.get('u') || null;
-      }
 
       // ── Sketchy draw utils ──
       function sketchLine(c, x1, y1, x2, y2, j) {
@@ -173,31 +191,31 @@
       
       function drawInstagram(c, s, j) {
         j = j || 0.6; c.clearRect(0,0,s,s); c.strokeStyle='#fff'; c.lineWidth=1.3; c.lineCap='round';
-        const m=s*.18,r=s*.12,w=s-m*2;
+        const m=s*.18, r=s*.12, w=s-m*2;
         c.beginPath();
-        c.moveTo(m+r+(Math.random()-.5)*j,m+(Math.random()-.5)*j);
-        c.lineTo(m+w-r+(Math.random()-.5)*j,m+(Math.random()-.5)*j);
-        c.quadraticCurveTo(m+w+(Math.random()-.5)*j,m+(Math.random()-.5)*j,m+w+(Math.random()-.5)*j,m+r+(Math.random()-.5)*j);
-        c.lineTo(m+w+(Math.random()-.5)*j,m+w-r+(Math.random()-.5)*j);
-        c.quadraticCurveTo(m+w+(Math.random()-.5)*j,m+w+(Math.random()-.5)*j,m+w-r+(Math.random()-.5)*j,m+w+(Math.random()-.5)*j);
-        c.lineTo(m+r+(Math.random()-.5)*j,m+w+(Math.random()-.5)*j);
-        c.quadraticCurveTo(m+(Math.random()-.5)*j,m+w+(Math.random()-.5)*j,m+(Math.random()-.5)*j,m+w-r+(Math.random()-.5)*j);
-        c.lineTo(m+(Math.random()-.5)*j,m+r+(Math.random()-.5)*j);
-        c.quadraticCurveTo(m+(Math.random()-.5)*j,m+(Math.random()-.5)*j,m+r+(Math.random()-.5)*j,m+(Math.random()-.5)*j);
+        c.moveTo(m+r+(Math.random()-.5)*j, m+(Math.random()-.5)*j);
+        c.lineTo(m+w-r+(Math.random()-.5)*j, m+(Math.random()-.5)*j);
+        c.quadraticCurveTo(m+w+(Math.random()-.5)*j, m+(Math.random()-.5)*j, m+w+(Math.random()-.5)*j, m+r+(Math.random()-.5)*j);
+        c.lineTo(m+w+(Math.random()-.5)*j, m+w-r+(Math.random()-.5)*j);
+        c.quadraticCurveTo(m+w+(Math.random()-.5)*j, m+w+(Math.random()-.5)*j, m+w-r+(Math.random()-.5)*j, m+w+(Math.random()-.5)*j);
+        c.lineTo(m+r+(Math.random()-.5)*j, m+w+(Math.random()-.5)*j);
+        c.quadraticCurveTo(m+(Math.random()-.5)*j, m+w+(Math.random()-.5)*j, m+(Math.random()-.5)*j, m+w-r+(Math.random()-.5)*j);
+        c.lineTo(m+(Math.random()-.5)*j, m+r+(Math.random()-.5)*j);
+        c.quadraticCurveTo(m+(Math.random()-.5)*j, m+(Math.random()-.5)*j, m+r+(Math.random()-.5)*j, m+(Math.random()-.5)*j);
         c.stroke();
-        const cx=s/2,cy=s/2,cr=w*.28,steps=14;
+        const cx=s/2, cy=s/2, cr=w*.28, steps=14;
         c.beginPath();
-        for(let i=0;i<=steps;i++){const a=i/steps*Math.PI*2;i===0?c.moveTo(cx+Math.cos(a)*(cr+(Math.random()-.5)*j),cy+Math.sin(a)*(cr+(Math.random()-.5)*j)):c.lineTo(cx+Math.cos(a)*(cr+(Math.random()-.5)*j),cy+Math.sin(a)*(cr+(Math.random()-.5)*j));}
+        for(let i=0;i<=steps;i++){ const a=i/steps*Math.PI*2; i===0?c.moveTo(cx+Math.cos(a)*(cr+(Math.random()-.5)*j), cy+Math.sin(a)*(cr+(Math.random()-.5)*j)) : c.lineTo(cx+Math.cos(a)*(cr+(Math.random()-.5)*j), cy+Math.sin(a)*(cr+(Math.random()-.5)*j)); }
         c.stroke();
-        c.beginPath();c.arc(m+w*.78,m+w*.22,s*.04,0,Math.PI*2);c.fillStyle='#fff';c.fill();
+        c.beginPath(); c.arc(m+w*.78, m+w*.22, s*.04, 0, Math.PI*2); c.fillStyle='#fff'; c.fill();
       }
       
       function drawLink(c, s, j) {
         j = j || 0.6; c.clearRect(0,0,s,s); c.strokeStyle='#fff'; c.lineWidth=1.3; c.lineCap='round';
-        sketchPath(c,`M${s*.38} ${s*.5} C${s*.38} ${s*.3} ${s*.62} ${s*.3} ${s*.62} ${s*.5}`,1,0,0,j);
-        sketchPath(c,`M${s*.38} ${s*.5} C${s*.38} ${s*.7} ${s*.62} ${s*.7} ${s*.62} ${s*.5}`,1,0,0,j);
-        sketchLine(c,s*.28,s*.5,s*.38,s*.5,j);
-        sketchLine(c,s*.62,s*.5,s*.72,s*.5,j);
+        sketchPath(c, `M${s*.38} ${s*.5} C${s*.38} ${s*.3} ${s*.62} ${s*.3} ${s*.62} ${s*.5}`, 1, 0, 0, j);
+        sketchPath(c, `M${s*.38} ${s*.5} C${s*.38} ${s*.7} ${s*.62} ${s*.7} ${s*.62} ${s*.5}`, 1, 0, 0, j);
+        sketchLine(c, s*.28, s*.5, s*.38, s*.5, j);
+        sketchLine(c, s*.62, s*.5, s*.72, s*.5, j);
       }
 
       const iconFns = { tiktok: drawTiktok, twitter: drawTwitter, instagram: drawInstagram, link: drawLink };
@@ -252,7 +270,7 @@
       const TW = 250, TH = 22, TF = '14px "JetBrains Mono",monospace';
       let ttw = 0, ttext = '', toff = 0, tphase = 'pause-start', tlt = 0, tpe = 0, trf = 0, tre = 0;
       
-      function cubicBezier(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
+      function cubicBezier(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2; }
       
       function startTitleAnim() {
         if (!playlist.length || !tc) return;
@@ -268,11 +286,11 @@
         if (ttw > TW) {
           const ms = ttw - TW;
           if (tphase === 'pause-start') { tpe += dt; if (tpe >= 1500) tphase = 'scroll'; }
-          else if (tphase === 'scroll') { toff += 35*(dt/1000); if (toff >= ms) { toff = ms; tphase = 'pause-end'; tpe = 0; } }
+          else if (tphase === 'scroll') { toff += 35 * (dt/1000); if (toff >= ms) { toff = ms; tphase = 'pause-end'; tpe = 0; } }
           else if (tphase === 'pause-end') { tpe += dt; if (tpe >= 1500) { tphase = 'reset'; trf = toff; tre = 0; } }
-          else if (tphase === 'reset') { tre += dt; const t = Math.min(1, tre/800); toff = trf*(1-cubicBezier(t)); if (t >= 1) { toff = 0; tphase = 'pause-start'; tpe = 0; } }
+          else if (tphase === 'reset') { tre += dt; const t = Math.min(1, tre/800); toff = trf * (1 - cubicBezier(t)); if (t >= 1) { toff = 0; tphase = 'pause-start'; tpe = 0; } }
         }
-        tc.clearRect(0,0,TW,TH); tc.save(); tc.beginPath(); tc.rect(0,0,TW,TH); tc.clip();
+        tc.clearRect(0, 0, TW, TH); tc.save(); tc.beginPath(); tc.rect(0, 0, TW, TH); tc.clip();
         tc.font = TF; tc.textBaseline = 'middle'; tc.fillStyle = 'rgba(255,255,255,0.35)';
         tc.fillText(ttext, ttw <= TW ? TW - ttw - 1 : -toff, TH/2);
         tc.restore(); requestAnimationFrame(drawTitle);
@@ -286,9 +304,9 @@
         const cvs = btn.querySelector('canvas');
         if (!cvs) return;
         const c = cvs.getContext('2d'), s = 44;
-        j = j || 1; c.clearRect(0,0,s,s); c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.lineCap = 'round';
-        if (playing) { sketchLine(c,s*.33,s*.22,s*.33,s*.78,j); sketchLine(c,s*.67,s*.22,s*.67,s*.78,j); }
-        else { sketchLine(c,s*.28,s*.18,s*.28,s*.82,j); sketchLine(c,s*.28,s*.18,s*.78,s*.5,j); sketchLine(c,s*.78,s*.5,s*.28,s*.82,j); }
+        j = j || 1; c.clearRect(0, 0, s, s); c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.lineCap = 'round';
+        if (playing) { sketchLine(c, s*.33, s*.22, s*.33, s*.78, j); sketchLine(c, s*.67, s*.22, s*.67, s*.78, j); }
+        else { sketchLine(c, s*.28, s*.18, s*.28, s*.82, j); sketchLine(c, s*.28, s*.18, s*.78, s*.5, j); sketchLine(c, s*.78, s*.5, s*.28, s*.82, j); }
       }
       
       function drawPrev(j) {
@@ -297,9 +315,9 @@
         const cvs = btn.querySelector('canvas');
         if (!cvs) return;
         const c = cvs.getContext('2d'), s = 40;
-        j = j || 1; c.clearRect(0,0,s,s); c.strokeStyle = '#fff'; c.lineWidth = 1.4; c.lineCap = 'round';
-        sketchLine(c,s*.55,s*.22,s*.28,s*.5,j); sketchLine(c,s*.28,s*.5,s*.55,s*.78,j);
-        sketchLine(c,s*.72,s*.22,s*.45,s*.5,j); sketchLine(c,s*.45,s*.5,s*.72,s*.78,j);
+        j = j || 1; c.clearRect(0, 0, s, s); c.strokeStyle = '#fff'; c.lineWidth = 1.4; c.lineCap = 'round';
+        sketchLine(c, s*.55, s*.22, s*.28, s*.5, j); sketchLine(c, s*.28, s*.5, s*.55, s*.78, j);
+        sketchLine(c, s*.72, s*.22, s*.45, s*.5, j); sketchLine(c, s*.45, s*.5, s*.72, s*.78, j);
       }
       
       function drawNext(j) {
@@ -308,9 +326,9 @@
         const cvs = btn.querySelector('canvas');
         if (!cvs) return;
         const c = cvs.getContext('2d'), s = 40;
-        j = j || 1; c.clearRect(0,0,s,s); c.strokeStyle = '#fff'; c.lineWidth = 1.4; c.lineCap = 'round';
-        sketchLine(c,s*.28,s*.22,s*.55,s*.5,j); sketchLine(c,s*.55,s*.5,s*.28,s*.78,j);
-        sketchLine(c,s*.45,s*.22,s*.72,s*.5,j); sketchLine(c,s*.72,s*.5,s*.45,s*.78,j);
+        j = j || 1; c.clearRect(0, 0, s, s); c.strokeStyle = '#fff'; c.lineWidth = 1.4; c.lineCap = 'round';
+        sketchLine(c, s*.28, s*.22, s*.55, s*.5, j); sketchLine(c, s*.55, s*.5, s*.28, s*.78, j);
+        sketchLine(c, s*.45, s*.22, s*.72, s*.5, j); sketchLine(c, s*.72, s*.5, s*.45, s*.78, j);
       }
 
       // Attach player event listeners
@@ -322,7 +340,7 @@
       if (prevBtn) prevBtn.addEventListener('click', prevTrack);
       if (nextBtn) nextBtn.addEventListener('click', nextTrack);
       
-      [{id:'player-prev',fn:drawPrev},{id:'player-toggle',fn:drawPlayPause},{id:'player-next',fn:drawNext}].forEach(({id,fn}) => {
+      [{id:'player-prev', fn: drawPrev}, {id:'player-toggle', fn: drawPlayPause}, {id:'player-next', fn: drawNext}].forEach(({id, fn}) => {
         const el = document.getElementById(id);
         if (!el) return;
         let iv = null;
@@ -338,7 +356,7 @@
       if (eCvs) {
         const eCtx = eCvs.getContext('2d');
         function drawEnterText() {
-          eCtx.clearRect(0,0,280,20);
+          eCtx.clearRect(0, 0, 280, 20);
           eCtx.font = '12px "JetBrains Mono",monospace';
           eCtx.textAlign = 'center'; eCtx.textBaseline = 'middle';
           for (let p = 0; p < 3; p++) {
@@ -367,7 +385,7 @@
               playerAudio.play().then(() => {
                 playing = true; drawPlayPause(); startTitleAnim();
                 const start = performance.now();
-                (function tick() { const p = Math.min(1,(performance.now()-start)/3000); playerAudio.volume = p*p*0.45; if (p < 1) requestAnimationFrame(tick); })();
+                (function tick() { const p = Math.min(1, (performance.now()-start)/3000); playerAudio.volume = p * p * 0.45; if (p < 1) requestAnimationFrame(tick); })();
               }).catch(() => {});
             }
           });
@@ -382,49 +400,49 @@
         function rsz() { sc.width = window.innerWidth; sc.height = window.innerHeight; }
         rsz(); window.addEventListener('resize', rsz);
         const flakes = [];
-        for (let i = 0; i < 120; i++) flakes.push({ x:Math.random()*window.innerWidth, y:Math.random()*window.innerHeight, r:0.5+Math.random()*2.5, speed:0.3+Math.random()*1, wind:(Math.random()-.5)*0.3, sway:Math.random()*Math.PI*2, swaySpeed:0.005+Math.random()*0.01, swayAmp:0.3+Math.random()*0.6, alpha:0.1+Math.random()*0.25 });
+        for (let i = 0; i < 120; i++) flakes.push({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, r: 0.5+Math.random()*2.5, speed: 0.3+Math.random()*1, wind: (Math.random()-.5)*0.3, sway: Math.random()*Math.PI*2, swaySpeed: 0.005+Math.random()*0.01, swayAmp: 0.3+Math.random()*0.6, alpha: 0.1+Math.random()*0.25 });
         function drawSnow() {
-          const W=sc.width,H=sc.height; sctx.clearRect(0,0,W,H);
-          for (const f of flakes) { f.y+=f.speed; f.sway+=f.swaySpeed; f.x+=f.wind+Math.sin(f.sway)*f.swayAmp*0.3; if(f.y>H+5){f.y=-5;f.x=Math.random()*W;} if(f.x>W+5)f.x=-5; if(f.x<-5)f.x=W+5; sctx.globalAlpha=f.alpha; sctx.fillStyle='#fff'; sctx.font=`${f.r*5}px monospace`; sctx.textAlign='center'; sctx.textBaseline='middle'; sctx.fillText('*',f.x,f.y); }
+          const W = sc.width, H = sc.height; sctx.clearRect(0, 0, W, H);
+          for (const f of flakes) { f.y += f.speed; f.sway += f.swaySpeed; f.x += f.wind + Math.sin(f.sway) * f.swayAmp * 0.3; if (f.y > H+5) { f.y = -5; f.x = Math.random() * W; } if (f.x > W+5) f.x = -5; if (f.x < -5) f.x = W+5; sctx.globalAlpha = f.alpha; sctx.fillStyle = '#fff'; sctx.font = `${f.r*5}px monospace`; sctx.textAlign = 'center'; sctx.textBaseline = 'middle'; sctx.fillText('*', f.x, f.y); }
           requestAnimationFrame(drawSnow);
         }
-        sc.style.opacity='0'; sc.style.transition='opacity 2s ease';
-        setTimeout(() => { sc.style.opacity='1'; drawSnow(); }, 600);
+        sc.style.opacity = '0'; sc.style.transition = 'opacity 2s ease';
+        setTimeout(() => { sc.style.opacity = '1'; drawSnow(); }, 600);
       }
 
       function initCrossCursor() {
-        const SZ=32,FR=4,PX=2,cv=document.createElement('canvas');
-        cv.width=SZ; cv.height=SZ; const cx=cv.getContext('2d');
-        const cr=['...............','.......'+'#'+'.......','.......#.......','.......'+'#'+'.......','.......#.......','.......'+'#'+'.......','.......#.......','.......'+'#'+'.......','.......#.......','.......'+'#'+'.......','....#######....','.......'+'#'+'.......','.......#.......','.......'+'#'+'.......','.......#.......'];
+        const SZ = 32, FR = 4, PX = 2, cv = document.createElement('canvas');
+        cv.width = SZ; cv.height = SZ; const cx = cv.getContext('2d');
+        const cr = ['...............', '.......#.......', '.......#.......', '.......#.......', '.......#.......', '.......#.......', '.......#.......', '.......#.......', '.......#.......', '.......#.......', '....#######....', '.......#.......', '.......#.......', '.......#.......', '.......#.......'];
         function df(f) {
-          cx.clearRect(0,0,SZ,SZ); const p=0.7+0.2*Math.sin(f*Math.PI/2);
-          for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(cr[y]&&cr[y][x]==='#'){cx.fillStyle='rgba(0,0,0,0.7)';cx.fillRect(x*PX-1,y*PX,PX+2,PX+2);cx.fillRect(x*PX,y*PX-1,PX+2,PX+2);}
-          for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(cr[y]&&cr[y][x]==='#'){cx.fillStyle='rgba(255,255,255,'+p+')';cx.fillRect(x*PX+1,y*PX+1,PX,PX);}
+          cx.clearRect(0, 0, SZ, SZ); const p = 0.7 + 0.2 * Math.sin(f * Math.PI/2);
+          for(let y = 0; y < 15; y++) for(let x = 0; x < 15; x++) if(cr[y] && cr[y][x] === '#') { cx.fillStyle = 'rgba(0,0,0,0.7)'; cx.fillRect(x*PX-1, y*PX, PX+2, PX+2); cx.fillRect(x*PX, y*PX-1, PX+2, PX+2); }
+          for(let y = 0; y < 15; y++) for(let x = 0; x < 15; x++) if(cr[y] && cr[y][x] === '#') { cx.fillStyle = 'rgba(255,255,255,'+p+')'; cx.fillRect(x*PX+1, y*PX+1, PX, PX); }
           return cv.toDataURL('image/png');
         }
-        const fs=[]; for(let i=0;i<FR;i++) fs.push(df(i)); let cur=0;
-        function ap() { document.body.style.cursor='url('+fs[cur]+') 15 21, crosshair'; cur=(cur+1)%FR; }
-        ap(); setInterval(ap,250);
+        const fs = []; for(let i = 0; i < FR; i++) fs.push(df(i)); let cur = 0;
+        function ap() { document.body.style.cursor = 'url('+fs[cur]+') 15 21, crosshair'; cur = (cur+1) % FR; }
+        ap(); setInterval(ap, 250);
       }
 
       function initSparkle() {
-        const N=50; let smx=400,smy=300,osmx=400,osmy=300;
-        const stars=[],tiny=[],sv=[],tv=[],ssx=[],ssy=[],ttx=[],tty=[];
-        function mkDiv(w,h){const d=document.createElement('div');d.style.cssText=`position:absolute;width:${w}px;height:${h}px;overflow:hidden;pointer-events:none`;return d;}
-        for(let i=0;i<N;i++){
-          const t=mkDiv(3,3);t.style.visibility='hidden';t.style.zIndex='9999';document.body.appendChild(t);tiny.push(t);sv[i]=0;tv[i]=0;
-          const s=mkDiv(5,5);s.style.cssText+=';background:transparent;visibility:hidden;z-index:9999';
-          const h=mkDiv(5,1),v=mkDiv(1,5);h.style.cssText+='top:2px;left:0';v.style.cssText+='top:0;left:2px';
-          s.appendChild(h);s.appendChild(v);document.body.appendChild(s);stars.push(s);
+        const N = 50; let smx = 400, smy = 300, osmx = 400, osmy = 300;
+        const stars = [], tiny = [], sv = [], tv = [], ssx = [], ssy = [], ttx = [], tty = [];
+        function mkDiv(w, h) { const d = document.createElement('div'); d.style.cssText = `position:absolute;width:${w}px;height:${h}px;overflow:hidden;pointer-events:none`; return d; }
+        for(let i = 0; i < N; i++) {
+          const t = mkDiv(3, 3); t.style.visibility = 'hidden'; t.style.zIndex = '9999'; document.body.appendChild(t); tiny.push(t); sv[i] = 0; tv[i] = 0;
+          const s = mkDiv(5, 5); s.style.cssText += ';background:transparent;visibility:hidden;z-index:9999';
+          const h = mkDiv(5, 1), v = mkDiv(1, 5); h.style.cssText += 'top:2px;left:0'; v.style.cssText += 'top:0;left:2px';
+          s.appendChild(h); s.appendChild(v); document.body.appendChild(s); stars.push(s);
         }
-        document.addEventListener('mousemove',e=>{smx=e.pageX;smy=e.pageY;});
-        function sparkle(){
-          if(Math.abs(smx-osmx)>1||Math.abs(smy-osmy)>1){osmx=smx;osmy=smy;for(let i=0;i<N;i++){if(!sv[i]){stars[i].style.left=(ssx[i]=smx)+'px';stars[i].style.top=(ssy[i]=smy)+'px';stars[i].style.clip='rect(0px,5px,5px,0px)';stars[i].childNodes[0].style.backgroundColor='white';stars[i].childNodes[1].style.backgroundColor='white';stars[i].style.visibility='visible';sv[i]=50;break;}}}
-          for(let i=0;i<N;i++){if(sv[i])uStar(i);if(tv[i])uTiny(i);}
-          setTimeout(sparkle,40);
+        document.addEventListener('mousemove', e => { smx = e.pageX; smy = e.pageY; });
+        function sparkle() {
+          if(Math.abs(smx-osmx) > 1 || Math.abs(smy-osmy) > 1) { osmx = smx; osmy = smy; for(let i = 0; i < N; i++) { if(!sv[i]) { stars[i].style.left = (ssx[i] = smx) + 'px'; stars[i].style.top = (ssy[i] = smy) + 'px'; stars[i].style.clip = 'rect(0px,5px,5px,0px)'; stars[i].childNodes[0].style.backgroundColor = 'white'; stars[i].childNodes[1].style.backgroundColor = 'white'; stars[i].style.visibility = 'visible'; sv[i] = 50; break; } } }
+          for(let i = 0; i < N; i++) { if(sv[i]) uStar(i); if(tv[i]) uTiny(i); }
+          setTimeout(sparkle, 40);
         }
-        function uStar(i){if(--sv[i]===25)stars[i].style.clip='rect(1px,4px,4px,1px)';if(sv[i]){ssy[i]+=1+Math.random()*3;ssx[i]+=(i%5-2)/5;if(ssy[i]<document.documentElement.scrollHeight){stars[i].style.top=ssy[i]+'px';stars[i].style.left=ssx[i]+'px';}else{stars[i].style.visibility='hidden';sv[i]=0;return;}}else{tv[i]=50;tiny[i].style.top=(tty[i]=ssy[i])+'px';tiny[i].style.left=(ttx[i]=ssx[i])+'px';tiny[i].style.width='2px';tiny[i].style.height='2px';tiny[i].style.backgroundColor='white';stars[i].style.visibility='hidden';tiny[i].style.visibility='visible';}}
-        function uTiny(i){if(--tv[i]===25){tiny[i].style.width='1px';tiny[i].style.height='1px';}if(tv[i]){tty[i]+=1+Math.random()*3;ttx[i]+=(i%5-2)/5;if(tty[i]<document.documentElement.scrollHeight){tiny[i].style.top=tty[i]+'px';tiny[i].style.left=ttx[i]+'px';}else{tiny[i].style.visibility='hidden';tv[i]=0;return;}}else tiny[i].style.visibility='hidden';}
+        function uStar(i) { if(--sv[i] === 25) stars[i].style.clip = 'rect(1px,4px,4px,1px)'; if(sv[i]) { ssy[i] += 1+Math.random()*3; ssx[i] += (i%5-2)/5; if(ssy[i] < document.documentElement.scrollHeight) { stars[i].style.top = ssy[i] + 'px'; stars[i].style.left = ssx[i] + 'px'; } else { stars[i].style.visibility = 'hidden'; sv[i] = 0; return; } } else { tv[i] = 50; tiny[i].style.top = (tty[i] = ssy[i]) + 'px'; tiny[i].style.left = (ttx[i] = ssx[i]) + 'px'; tiny[i].style.width = '2px'; tiny[i].style.height = '2px'; tiny[i].style.backgroundColor = 'white'; stars[i].style.visibility = 'hidden'; tiny[i].style.visibility = 'visible'; } }
+        function uTiny(i) { if(--tv[i] === 25) { tiny[i].style.width = '1px'; tiny[i].style.height = '1px'; } if(tv[i]) { tty[i] += 1+Math.random()*3; ttx[i] += (i%5-2)/5; if(tty[i] < document.documentElement.scrollHeight) { tiny[i].style.top = tty[i] + 'px'; tiny[i].style.left = ttx[i] + 'px'; } else { tiny[i].style.visibility = 'hidden'; tv[i] = 0; return; } } else tiny[i].style.visibility = 'hidden'; }
         sparkle();
       }
 
@@ -438,7 +456,7 @@
           try {
             const res = await fetch(api.url); if (!res.ok) continue;
             const json = await res.json(); const { av, name } = api.parse(json);
-            if (av) return { src: `https://cdn.discordapp.com/avatars/${discordId}/${av}.${av.startsWith('a_')?'gif':'png'}?size=256`, name };
+            if (av) return { src: `https://cdn.discordapp.com/avatars/${discordId}/${av}.${av.startsWith('a_') ? 'gif' : 'png'}?size=256`, name };
           } catch(e) {}
         }
         return null;
@@ -446,13 +464,17 @@
 
       // ── MAIN: load profile from Supabase ──
       async function loadProfile() {
-        const slug = getSlug();
+        const slug = getUserSlug();
         console.log('Loading profile for slug:', slug);
         
-        if (!slug) { show404(); return; }
+        if (!slug) { 
+          console.log('No slug found, showing 404');
+          show404(); 
+          return; 
+        }
 
         const { data, error } = await sb.from('profiles').select('*').eq('slug', slug).maybeSingle();
-        console.log('Supabase response:', { data, error });
+        console.log('Supabase response:', { data, error, slug });
         
         if (error || !data) { 
           console.error('Profile not found:', error);
@@ -482,7 +504,7 @@
           bgVideo.src = data.bg_video;
         }
 
-        // Playlist — supports both stored URLs and Supabase Storage public URLs
+        // Playlist - supports both stored URLs and Supabase Storage public URLs
         if (data.tracks && data.tracks.length) {
           playlist = data.tracks.map(t => ({
             title: t.title || 'untitled',
@@ -502,10 +524,10 @@
         if (sw) {
           sw.innerHTML = '';
           const s = data.socials || {};
-          if (s.tiktok)    sw.appendChild(makeSocialIcon('tiktok', s.tiktok));
-          if (s.twitter)   sw.appendChild(makeSocialIcon('twitter', s.twitter));
+          if (s.tiktok) sw.appendChild(makeSocialIcon('tiktok', s.tiktok));
+          if (s.twitter) sw.appendChild(makeSocialIcon('twitter', s.twitter));
           if (s.instagram) sw.appendChild(makeSocialIcon('instagram', s.instagram));
-          if (s.link)      sw.appendChild(makeSocialIcon('link', s.link, s.link_label));
+          if (s.link) sw.appendChild(makeSocialIcon('link', s.link, s.link_label));
         }
 
         // Effects
