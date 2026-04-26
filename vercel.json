@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/fav/:path*",
+      "destination": "/fav/:path*"
+    },
+    {
       "source": "/admin",
       "destination": "/admin.html"
     },
@@ -13,7 +17,7 @@
       "destination": "/profile.html"
     },
     {
-      "source": "/(.*)",
+      "source": "/:path*",
       "destination": "/profile.html"
     }
   ],
