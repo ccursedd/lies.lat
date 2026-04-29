@@ -1,266 +1,716 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>lies.lat</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>pin.lies — visual board</title>
+  <!-- Supabase JS library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    body {
+      background: #0a0a0a;
+      color: #ededed;
+      font-family: 'Inter', system-ui, -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, sans-serif;
+      font-size: 14px;
+      line-height: 1.4;
+    }
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box;}
+    /* main layout */
+    .app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
 
-body{
-  background:#000;
-  color:#fff;
-  font-family:monospace;
-  overflow:hidden;
-}
+    /* navbar */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(14px);
+      background: rgba(10, 10, 10, 0.75);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
 
-/* fade */
-.fade{animation:fade .4s ease;}
-@keyframes fade{from{opacity:0}to{opacity:1}}
+    .logo {
+      font-weight: 600;
+      font-size: 1.25rem;
+      letter-spacing: -0.3px;
+      background: linear-gradient(135deg, #ffffff, #a0a0ff);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
 
-/* AUTH */
-#auth{
-  height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
 
-.box{
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-  width:260px;
-  align-items:center;
-}
+    .user-greeting {
+      font-size: 0.8rem;
+      background: rgba(255,255,255,0.05);
+      padding: 6px 12px;
+      border-radius: 40px;
+      letter-spacing: 0.2px;
+      backdrop-filter: blur(4px);
+    }
 
-.title{
-  letter-spacing:6px;
-  font-size:11px;
-  opacity:.2;
-}
+    button, .btn-like {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #e0e0e0;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 32px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(4px);
+    }
 
-input{
-  width:100%;
-  background:none;
-  border:none;
-  border-bottom:1px solid #222;
-  color:#fff;
-  padding:10px;
-  text-align:center;
-}
+    button:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: white;
+    }
 
-input:focus{border-color:#555;}
+    .btn-primary {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: white;
+    }
 
-button{
-  background:none;
-  border:1px solid #222;
-  color:#888;
-  padding:10px 20px;
-  cursor:pointer;
-  transition:.2s;
-}
+    .btn-primary:hover {
+      background: #1d4ed8;
+      border-color: #1d4ed8;
+    }
 
-button:hover{
-  color:#fff;
-  border-color:#555;
-}
+    .btn-outline {
+      border-color: #3b82f6;
+      color: #90cdf4;
+    }
 
-.msg{font-size:10px;opacity:.5;height:14px;}
+    /* masonry grid */
+    .board {
+      flex: 1;
+      padding: 28px 24px;
+    }
 
-/* APP */
-#app{
-  display:none;
-  height:100vh;
-  overflow-y:auto;
-}
+    .masonry {
+      column-count: 4;
+      column-gap: 20px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
 
-/* topbar */
-.top{
-  position:sticky;
-  top:0;
-  background:#000;
-  border-bottom:1px solid #111;
-  padding:12px;
-  display:flex;
-  justify-content:space-between;
-}
+    .pin-card {
+      break-inside: avoid;
+      margin-bottom: 20px;
+      background: #111111;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
 
-/* grid */
-.grid{
-  column-count:5;
-  column-gap:10px;
-  padding:10px;
-}
+    .pin-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.5);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
 
-.card{
-  break-inside:avoid;
-  margin-bottom:10px;
-  opacity:0;
-  transform:translateY(10px);
-  animation:in .4s forwards;
-}
-@keyframes in{to{opacity:1;transform:none}}
+    .pin-media {
+      width: 100%;
+      display: block;
+      background: #1a1a1a;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
 
-.card img{
-  width:100%;
-  border-radius:6px;
-  transition:.3s;
-}
-.card img:hover{transform:scale(1.02);}
+    .pin-media img, .pin-media video {
+      width: 100%;
+      display: block;
+      object-fit: cover;
+      max-height: 600px;
+    }
 
-/* upload */
-.upload{
-  position:fixed;
-  bottom:20px;
-  right:20px;
-}
+    .pin-info {
+      padding: 14px 16px 16px;
+    }
 
-.upload label{
-  border:1px solid #222;
-  padding:12px;
-  cursor:pointer;
-}
+    .pin-text {
+      font-size: 0.85rem;
+      color: #cfcfcf;
+      word-break: break-word;
+      white-space: pre-wrap;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
 
-.upload input{display:none;}
+    .pin-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.65rem;
+      color: #8a8a8a;
+      letter-spacing: 0.3px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 10px;
+      margin-top: 4px;
+    }
 
-.loading{
-  text-align:center;
-  padding:20px;
-  opacity:.3;
-}
+    .delete-pin {
+      background: none;
+      border: none;
+      color: #8f8f8f;
+      font-size: 0.7rem;
+      padding: 4px 8px;
+      border-radius: 30px;
+    }
 
-/* mobile */
-@media(max-width:900px){
-  .grid{column-count:2;}
-}
-</style>
+    .delete-pin:hover {
+      background: rgba(255, 70, 70, 0.2);
+      color: #ff8888;
+    }
+
+    /* create modal */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.2s;
+    }
+
+    .modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-content {
+      background: #141416;
+      border-radius: 36px;
+      max-width: 500px;
+      width: 90%;
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content h3 {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+
+    .modal-content input, .modal-content textarea {
+      width: 100%;
+      background: #0c0c0e;
+      border: 1px solid #2a2a2e;
+      border-radius: 20px;
+      padding: 12px 16px;
+      color: white;
+      font-family: inherit;
+      margin-bottom: 16px;
+      resize: vertical;
+    }
+
+    .modal-content textarea {
+      min-height: 80px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    /* auth overlay */
+    .auth-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000000e6;
+      backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      transition: all 0.2s;
+    }
+
+    .auth-card {
+      background: #0f0f12;
+      border-radius: 48px;
+      padding: 40px 32px;
+      width: 340px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 30px 40px rgba(0,0,0,0.6);
+    }
+
+    .auth-card input {
+      background: #1a1a1f;
+      border: 1px solid #2c2c32;
+      border-radius: 44px;
+      padding: 12px 20px;
+      width: 100%;
+      margin-bottom: 16px;
+      color: white;
+    }
+
+    .error-msg {
+      color: #ff8989;
+      font-size: 0.7rem;
+      margin: 8px 0;
+    }
+
+    /* empty state */
+    .empty-board {
+      text-align: center;
+      padding: 80px 20px;
+      color: rgba(255,255,255,0.3);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 1000px) {
+      .masonry { column-count: 3; }
+    }
+    @media (max-width: 700px) {
+      .masonry { column-count: 2; }
+      .navbar { flex-direction: column; align-items: stretch; }
+      .nav-actions { justify-content: space-between; }
+    }
+
+    .loader {
+      text-align: center;
+      padding: 40px;
+      color: #aaa;
+    }
+  </style>
 </head>
-
 <body>
-
-<div id="auth">
-  <div class="box">
-    <div class="title">lies.lat</div>
-    <input id="email" placeholder="email">
-    <input id="password" type="password" placeholder="password">
-    <button onclick="login()">enter</button>
-    <button onclick="register()">create</button>
-    <div class="msg" id="msg"></div>
-  </div>
-</div>
-
-<div id="app">
-  <div class="top">
-    <div>lies.lat</div>
-    <button onclick="logout()">logout</button>
-  </div>
-
-  <div id="grid" class="grid"></div>
-
-  <div class="upload">
-    <label>
-      +
-      <input type="file" id="file">
-    </label>
-  </div>
-</div>
+<div id="root" class="app"></div>
 
 <script>
-const supabase = window.supabase.createClient(
-  "https://ssddpeplnanvnlkrsnjh.supabase.co",
-  "sb_publishable_gG27LVBTwhPXkutZvNiEKQ_JL3sO9OD"
+  // ---------- SUPABASE CLIENT ----------
+  const SUPABASE_URL = 'https://ssddpeplnanvnlkrsnjh.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_gG27LVBTwhPXkutZvNiEKQ_JL3sO9OD';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ---------- GLOBAL STATE ----------
+  let currentUser = null;        // { id, email }
+  let pins = [];                 // array of pin objects
+  let loadingPins = false;
+
+  // DOM references
+  let appContainer = document.getElementById('root');
+  let authOverlay = null;
+
+  // Helper: render everything
+  function render() {
+    if (!currentUser) {
+      renderAuthScreen();
+    } else {
+      renderMainApp();
+    }
+  }
+
+  // ---------- AUTH UI (login / register) ----------
+  function renderAuthScreen() {
+    appContainer.innerHTML = `
+      <div class="auth-overlay" id="authOverlay">
+        <div class="auth-card">
+          <div style="font-size: 28px; margin-bottom: 8px;">📌</div>
+          <div style="font-weight: 500; margin-bottom: 24px; letter-spacing: -0.2px;">pin.lies</div>
+          <input type="email" id="authEmail" placeholder="Email" autocomplete="email">
+          <input type="password" id="authPassword" placeholder="Password" autocomplete="current-password">
+          <div id="authError" class="error-msg"></div>
+          <div style="display: flex; gap: 12px; margin-top: 16px;">
+            <button id="loginBtn" style="flex:1;">Log in</button>
+            <button id="registerBtn" style="flex:1;" class="btn-outline">Sign up</button>
+          </div>
+          <div class="text-muted" style="font-size: 0.65rem; margin-top: 24px; opacity:0.4">✨ post images, gifs & text</div>
+        </div>
+      </div>
+    `;
+
+    const loginBtn = document.getElementById('loginBtn');
+    const registerBtn = document.getElementById('registerBtn');
+    const authError = document.getElementById('authError');
+
+    async function handleAuth(mode) {
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value;
+      authError.innerText = '';
+      if (!email || !password) {
+        authError.innerText = '✧ fill both email and password ✧';
+        return;
+      }
+      try {
+        let result;
+        if (mode === 'login') {
+          result = await supabase.auth.signInWithPassword({ email, password });
+        } else {
+          result = await supabase.auth.signUp({ email, password });
+        }
+        if (result.error) throw new Error(result.error.message);
+        const sessionUser = result.data.user;
+        if (sessionUser) {
+          currentUser = { id: sessionUser.id, email: sessionUser.email };
+          await fetchPins();     // load pins after login
+          render();
+        } else {
+          if (mode === 'register') authError.innerText = '✅ Check email to confirm? (demo auto-confirm if allowed)';
+          else authError.innerText = 'Login failed';
+        }
+      } catch (err) {
+        authError.innerText = err.message;
+      }
+    }
+
+    loginBtn.onclick = () => handleAuth('login');
+    registerBtn.onclick = () => handleAuth('register');
+  }
+
+  // ---------- FETCH PINS (real-time friendly) ----------
+  async function fetchPins() {
+    if (!currentUser) return;
+    loadingPins = true;
+    // re-render to show loader if needed (but we call after render)
+    try {
+      const { data, error } = await supabase
+        .from('pins')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      pins = data || [];
+    } catch (err) {
+      console.error('fetch pins error', err);
+      pins = [];
+    } finally {
+      loadingPins = false;
+      if (currentUser) renderMainApp(); // refresh UI after fetch
+    }
+  }
+
+  // create a new pin (media url + optional text)
+  async function createPin(mediaUrl, captionText) {
+    if (!currentUser) return false;
+    if (!mediaUrl || mediaUrl.trim() === '') {
+      alert('Please paste a valid image or GIF url');
+      return false;
+    }
+    // simple url check (must start with http)
+    if (!mediaUrl.startsWith('http://') && !mediaUrl.startsWith('https://')) {
+      alert('URL must start with http:// or https://');
+      return false;
+    }
+    const newPin = {
+      user_id: currentUser.id,
+      user_email: currentUser.email,
+      media_url: mediaUrl.trim(),
+      caption: captionText?.trim() || '',
+      created_at: new Date().toISOString(),
+    };
+    try {
+      const { data, error } = await supabase.from('pins').insert([newPin]).select();
+      if (error) throw error;
+      if (data && data.length) {
+        pins = [data[0], ...pins];   // prepend
+        renderMainApp();
+      }
+      return true;
+    } catch (err) {
+      alert('Failed to post: ' + err.message);
+      return false;
+    }
+  }
+
+  async function deletePin(pinId) {
+    if (!currentUser) return;
+    try {
+      const { error } = await supabase.from('pins').delete().eq('id', pinId).eq('user_id', currentUser.id);
+      if (error) throw error;
+      pins = pins.filter(p => p.id !== pinId);
+      renderMainApp();
+    } catch (err) {
+      alert("Can't delete: " + err.message);
+    }
+  }
+
+  // ---------- MAIN BOARD (Pinterest-like) ----------
+  function renderMainApp() {
+    if (!currentUser) return;
+
+    const isPinsEmpty = (!loadingPins && pins.length === 0);
+    const masonryHtml = loadingPins ? `<div class="loader">loading pixels...</div>` : 
+      (pins.length === 0 ? `<div class="empty-board">🌀 no pins yet · paste an image or gif url to start</div>` :
+      `<div class="masonry">
+        ${pins.map(pin => `
+          <div class="pin-card" data-pin-id="${pin.id}">
+            <div class="pin-media" onclick="window.open('${escapeHtml(pin.media_url)}', '_blank')">
+              ${pin.media_url.match(/\.(mp4|webm|mov)/i) ? 
+                `<video src="${escapeHtml(pin.media_url)}" autoplay loop muted playsinline></video>` : 
+                `<img src="${escapeHtml(pin.media_url)}" alt="pin" loading="lazy" onerror="this.src='https://placehold.co/600x400/222/555?text=broken+link'">`
+              }
+            </div>
+            <div class="pin-info">
+              <div class="pin-text">${escapeHtml(pin.caption || '')}</div>
+              <div class="pin-meta">
+                <span>📌 ${escapeHtml(pin.user_email?.split('@')[0] || 'user')}</span>
+                ${pin.user_id === currentUser.id ? `<button class="delete-pin" data-id="${pin.id}">✕ delete</button>` : ''}
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>`);
+
+    appContainer.innerHTML = `
+      <div class="app">
+        <div class="navbar">
+          <div class="logo">📌 pin.lies — visual archive</div>
+          <div class="nav-actions">
+            <span class="user-greeting">✧ ${escapeHtml(currentUser.email?.split('@')[0] || currentUser.id)}</span>
+            <button id="newPostBtn" class="btn-primary">+ new pin</button>
+            <button id="logoutBtn">logout</button>
+          </div>
+        </div>
+        <div class="board">
+          ${masonryHtml}
+        </div>
+      </div>
+      <!-- Modal for creating pin -->
+      <div id="pinModal" class="modal">
+        <div class="modal-content">
+          <h3>paste image or GIF link</h3>
+          <input type="text" id="mediaUrlInput" placeholder="https://... .jpg / .png / .gif" autocomplete="off">
+          <textarea id="captionInput" placeholder="add a short description (optional)"></textarea>
+          <div class="modal-buttons">
+            <button id="modalCancel">cancel</button>
+            <button id="modalSubmit" class="btn-primary">post to board</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // attach modal handlers
+    const modal = document.getElementById('pinModal');
+    const newBtn = document.getElementById('newPostBtn');
+    const cancelBtn = document.getElementById('modalCancel');
+    const submitBtn = document.getElementById('modalSubmit');
+
+    function openModal() { modal.classList.add('active'); }
+    function closeModal() { modal.classList.remove('active'); }
+
+    newBtn?.addEventListener('click', openModal);
+    cancelBtn?.addEventListener('click', closeModal);
+    submitBtn?.addEventListener('click', async () => {
+      const urlInput = document.getElementById('mediaUrlInput');
+      const captionText = document.getElementById('captionInput');
+      const url = urlInput.value.trim();
+      const caption = captionText.value;
+      if (!url) {
+        alert("please provide image/gif url");
+        return;
+      }
+      const success = await createPin(url, caption);
+      if (success) {
+        closeModal();
+        urlInput.value = '';
+        captionText.value = '';
+      }
+    });
+    // close modal on outside click
+    modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    // delete listeners
+    document.querySelectorAll('.delete-pin').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pinId = btn.getAttribute('data-id');
+        if (pinId && confirm('remove this pin?')) deletePin(pinId);
+      });
+    });
+
+    // Logout handler
+    document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      currentUser = null;
+      pins = [];
+      render();
+    });
+  }
+
+  // utils
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+      return c;
+    });
+  }
+
+  // ---------- SUPABASE AUTH STATE LISTENER + TABLE CHECK/CREATION hint ----------
+  async function initApp() {
+    // check current session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      currentUser = { id: session.user.id, email: session.user.email };
+      await fetchPins();
+      render();
+    } else {
+      render();
+    }
+
+    // Listen for auth changes
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        currentUser = { id: session.user.id, email: session.user.email };
+        await fetchPins();
+        render();
+      } else if (event === 'SIGNED_OUT') {
+        currentUser = null;
+        pins = [];
+        render();
+      }
+    });
+  }
+
+  // ---------- ensure 'pins' table exists (manual info prompt but we create it via UI if missing, show error) ----------
+  // supabase realtime: we will try to insert/fetch; if table missing, show friendly error to set up table.
+  // but we provide user instructions in console/alert to create pins table.
+  // override fetchPins to handle missing table error once
+  const originalFetch = fetchPins;
+  window.fetchPins = fetchPins;
+  fetchPins = async function() {
+    if (!currentUser) return;
+    loadingPins = true;
+    if (currentUser && !loadingPins) renderMainApp();
+    try {
+      const { data, error } = await supabase
+        .from('pins')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) {
+        if (error.message.includes('relation') && error.message.includes('does not exist')) {
+          alert(`⚠️ Database table "pins" missing.\n\nCreate table in Supabase SQL editor:\n
+CREATE TABLE pins (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid NOT NULL,
+  user_email text,
+  media_url text NOT NULL,
+  caption text,
+  created_at timestamptz DEFAULT now()
 );
+ALTER TABLE pins ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Enable all for authenticated users" ON pins
+  USING (auth.role() = 'authenticated');
+CREATE POLICY "Users can delete own pins" ON pins
+  FOR DELETE USING (auth.uid() = user_id);
+          `);
+          pins = [];
+        } else throw error;
+      } else {
+        pins = data || [];
+      }
+    } catch (err) {
+      console.error(err);
+      pins = [];
+    } finally {
+      loadingPins = false;
+      if (currentUser) renderMainApp();
+    }
+  }.bind(this);
 
-/* AUTH */
-async function login(){
-  msg.textContent="...";
-  const {error}=await supabase.auth.signInWithPassword({
-    email:email.value,
-    password:password.value
-  });
-  msg.textContent=error?error.message:"ok";
-}
+  // patch createPin also to show table error gracefully
+  const originalCreate = createPin;
+  window.createPin = createPin;
+  createPin = async function(mediaUrl, captionText) {
+    if (!currentUser) return false;
+    if (!mediaUrl.trim()) { alert("url required"); return false; }
+    try {
+      const newPin = {
+        user_id: currentUser.id,
+        user_email: currentUser.email,
+        media_url: mediaUrl.trim(),
+        caption: captionText?.trim() || '',
+        created_at: new Date().toISOString(),
+      };
+      const { data, error } = await supabase.from('pins').insert([newPin]).select();
+      if (error) {
+        if (error.message.includes('does not exist')) {
+          alert("❌ Table 'pins' missing. Please create it via SQL editor (check console instructions).");
+        } else throw error;
+        return false;
+      }
+      if (data) {
+        pins = [data[0], ...pins];
+        renderMainApp();
+        return true;
+      }
+      return false;
+    } catch (err) {
+      alert("post error: " + err.message);
+      return false;
+    }
+  };
 
-async function register(){
-  msg.textContent="...";
-  const {error}=await supabase.auth.signUp({
-    email:email.value,
-    password:password.value
-  });
-  msg.textContent=error?error.message:"created";
-}
+  // replace delete with similar safety
+  const originalDelete = deletePin;
+  window.deletePin = deletePin;
+  deletePin = async function(pinId) {
+    if (!currentUser) return;
+    try {
+      const { error } = await supabase.from('pins').delete().eq('id', pinId).eq('user_id', currentUser.id);
+      if (error) throw error;
+      pins = pins.filter(p => p.id !== pinId);
+      renderMainApp();
+    } catch (err) {
+      alert("delete error: " + err.message);
+    }
+  };
 
-async function logout(){
-  await supabase.auth.signOut();
-}
+  // Override globals so event handlers refer to new functions
+  window.createPin = createPin;
+  window.deletePin = deletePin;
+  window.fetchPins = fetchPins;
 
-/* SESSION */
-supabase.auth.onAuthStateChange((e,session)=>{
-  if(session){
-    auth.style.display="none";
-    app.style.display="block";
-    loadPosts();
-  }else{
-    auth.style.display="flex";
-    app.style.display="none";
-  }
-});
-
-/* UPLOAD */
-document.getElementById("file").addEventListener("change",upload);
-
-async function upload(){
-  const file=this.files[0];
-  if(!file) return;
-
-  const user=(await supabase.auth.getUser()).data.user;
-  if(!user) return alert("login required");
-
-  const name=Date.now()+"-"+file.name;
-
-  const {error}=await supabase.storage.from("images").upload(name,file);
-  if(error) return alert(error.message);
-
-  const {data}=supabase.storage.from("images").getPublicUrl(name);
-
-  await supabase.from("posts").insert({
-    user_id:user.id,
-    image_url:data.publicUrl
-  });
-
-  this.value="";
-  loadPosts();
-}
-
-/* LOAD */
-async function loadPosts(){
-  grid.innerHTML='<div class="loading">loading...</div>';
-
-  const {data,error}=await supabase
-    .from("posts")
-    .select("*")
-    .order("created_at",{ascending:false});
-
-  if(error){
-    grid.innerHTML="error loading";
-    return;
-  }
-
-  grid.innerHTML="";
-
-  data.forEach((p,i)=>{
-    const div=document.createElement("div");
-    div.className="card";
-    div.style.animationDelay=i*0.04+"s";
-    div.innerHTML=`<img src="${p.image_url}">`;
-    grid.appendChild(div);
-  });
-}
+  // start
+  initApp();
 </script>
-
 </body>
 </html>
