@@ -1,716 +1,1297 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>pin.lies — visual board</title>
-  <!-- Supabase JS library -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>lies.lat</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: #000;
+  color: #fff;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Courier New', monospace;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a { color: rgba(255,255,255,0.3); text-decoration: none; transition: color 0.2s; }
+a:hover { color: rgba(255,255,255,0.7); }
 
-    body {
-      background: #0a0a0a;
-      color: #ededed;
-      font-family: 'Inter', system-ui, -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, sans-serif;
-      font-size: 14px;
-      line-height: 1.4;
-    }
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); }
 
-    /* main layout */
-    .app {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
+/* ── ANIMATIONS ── */
+.fade-in { opacity: 0; animation: fadeIn 0.5s ease forwards; }
+.fade-in-delay { opacity: 0; animation: fadeIn 0.5s ease 0.15s forwards; }
+.fade-in-delay2 { opacity: 0; animation: fadeIn 0.5s ease 0.3s forwards; }
+@keyframes fadeIn { to { opacity: 1; } }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes slideUp { from{transform:translateY(8px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
 
-    /* navbar */
-    .navbar {
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      backdrop-filter: blur(14px);
-      background: rgba(10, 10, 10, 0.75);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      padding: 12px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
+/* ── INPUTS ── */
+input, textarea {
+  background: transparent; border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: #fff; font-family: inherit; font-size: 12px;
+  padding: 9px 0; outline: none; width: 100%;
+  transition: border-color 0.2s;
+  letter-spacing: 0.5px;
+}
+input:focus, textarea:focus { border-color: rgba(255,255,255,0.25); }
+input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.1); }
+textarea { resize: none; border: 1px solid rgba(255,255,255,0.08); padding: 8px; border-radius: 0; min-height: 52px; }
+textarea:focus { border-color: rgba(255,255,255,0.2); }
 
-    .logo {
-      font-weight: 600;
-      font-size: 1.25rem;
-      letter-spacing: -0.3px;
-      background: linear-gradient(135deg, #ffffff, #a0a0ff);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-    }
+/* ── BUTTONS ── */
+.btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.35);
+  font-family: inherit; font-size: 9px;
+  letter-spacing: 3px; text-transform: uppercase;
+  padding: 9px 24px; cursor: pointer;
+  transition: all 0.2s; border-radius: 0;
+}
+.btn:hover { border-color: rgba(255,255,255,0.18); color: rgba(255,255,255,0.75); }
+.btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
-    .nav-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
+.btn-ghost { border-color: transparent; padding: 6px 0; }
+.btn-ghost:hover { border-color: transparent; color: rgba(255,255,255,0.7); }
 
-    .user-greeting {
-      font-size: 0.8rem;
-      background: rgba(255,255,255,0.05);
-      padding: 6px 12px;
-      border-radius: 40px;
-      letter-spacing: 0.2px;
-      backdrop-filter: blur(4px);
-    }
+.btn-accent { border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.6); }
+.btn-accent:hover { border-color: rgba(255,255,255,0.35); color: #fff; }
 
-    button, .btn-like {
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #e0e0e0;
-      font-family: inherit;
-      font-size: 0.75rem;
-      font-weight: 500;
-      padding: 8px 16px;
-      border-radius: 32px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      backdrop-filter: blur(4px);
-    }
+.btn-dim { border-color: rgba(255,80,80,0.12); color: rgba(255,80,80,0.35); }
+.btn-dim:hover { border-color: rgba(255,80,80,0.3); color: rgba(255,80,80,0.75); }
 
-    button:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.3);
-      color: white;
-    }
+.btn-sm { padding: 5px 14px; font-size: 8px; letter-spacing: 2px; }
+.btn-xs { padding: 4px 10px; font-size: 8px; letter-spacing: 1.5px; }
 
-    .btn-primary {
-      background: #2563eb;
-      border-color: #2563eb;
-      color: white;
-    }
+.btn-full { width: 100%; display: block; text-align: center; }
 
-    .btn-primary:hover {
-      background: #1d4ed8;
-      border-color: #1d4ed8;
-    }
+/* ── FIELD LINE EFFECT ── */
+.field-wrap { position: relative; }
+.field-line { position: absolute; bottom: 0; left: 50%; width: 0; height: 1px; background: rgba(255,255,255,0.4); transition: width 0.3s, left 0.3s; }
+.field-wrap input:focus ~ .field-line { width: 100%; left: 0; }
 
-    .btn-outline {
-      border-color: #3b82f6;
-      color: #90cdf4;
-    }
+/* ── TOGGLE ── */
+.toggle-wrap { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.toggle-track {
+  width: 28px; height: 14px;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 7px; position: relative;
+  transition: border-color 0.2s;
+  flex-shrink: 0;
+}
+.toggle-thumb {
+  position: absolute; top: 2px; left: 2px;
+  width: 8px; height: 8px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 50%; transition: all 0.2s;
+}
+.toggle-track.on { border-color: rgba(255,255,255,0.4); }
+.toggle-track.on .toggle-thumb { left: 16px; background: rgba(255,255,255,0.8); }
 
-    /* masonry grid */
-    .board {
-      flex: 1;
-      padding: 28px 24px;
-    }
+/* ────────────────────── AUTH PAGE ────────────────────── */
+#page-auth {
+  height: 100vh; display: flex; align-items: center;
+  justify-content: center; flex-direction: column; gap: 0;
+}
 
-    .masonry {
-      column-count: 4;
-      column-gap: 20px;
-      max-width: 1600px;
-      margin: 0 auto;
-    }
+.auth-box {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 18px; width: 260px;
+}
+.auth-wordmark {
+  font-size: 11px; letter-spacing: 8px;
+  text-transform: lowercase; color: rgba(255,255,255,0.15);
+  margin-bottom: 10px;
+}
+.auth-wordmark span { color: rgba(255,255,255,0.5); }
+.auth-err {
+  font-size: 9px; letter-spacing: 1.5px;
+  color: rgba(255,80,80,0.6); min-height: 12px; text-align: center;
+}
+.auth-sub {
+  font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.1);
+  cursor: pointer; transition: color 0.2s; text-transform: uppercase;
+}
+.auth-sub:hover { color: rgba(255,255,255,0.35); }
 
-    .pin-card {
-      break-inside: avoid;
-      margin-bottom: 20px;
-      background: #111111;
-      border-radius: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      overflow: hidden;
-      transition: transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    }
+/* ────────────────────── APP SHELL ────────────────────── */
+#page-app { display: none; min-height: 100vh; }
 
-    .pin-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.5);
-      border-color: rgba(255, 255, 255, 0.15);
-    }
+.topbar {
+  position: sticky; top: 0; z-index: 80;
+  background: rgba(0,0,0,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  height: 48px; display: flex; align-items: center;
+  padding: 0 32px;
+}
+.topbar-left {
+  display: flex; align-items: center; gap: 20px; flex: 1;
+}
+.wordmark {
+  font-size: 11px; letter-spacing: 5px; text-transform: lowercase;
+  color: rgba(255,255,255,0.2); cursor: default; user-select: none;
+}
+.wordmark span { color: rgba(255,255,255,0.55); }
+.topbar-sep {
+  width: 1px; height: 14px;
+  background: rgba(255,255,255,0.07);
+}
+.topbar-user {
+  font-size: 10px; letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.2);
+}
 
-    .pin-media {
-      width: 100%;
-      display: block;
-      background: #1a1a1a;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
+.topbar-right { display: flex; align-items: center; gap: 20px; }
+.topbar-signout {
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.13); cursor: pointer; transition: color 0.2s;
+  background: none; border: none; font-family: inherit;
+}
+.topbar-signout:hover { color: rgba(255,80,80,0.5); }
 
-    .pin-media img, .pin-media video {
-      width: 100%;
-      display: block;
-      object-fit: cover;
-      max-height: 600px;
-    }
+/* ────────────────────── MAIN ────────────────────── */
+.main { max-width: 900px; margin: 0 auto; padding: 52px 32px 80px; }
 
-    .pin-info {
-      padding: 14px 16px 16px;
-    }
+/* ── DASHBOARD ── */
+.dash-header { margin-bottom: 52px; }
+.dash-title {
+  font-size: 9px; letter-spacing: 6px; text-transform: uppercase;
+  color: rgba(255,255,255,0.1); margin-bottom: 32px;
+  display: flex; align-items: center; gap: 12px;
+}
+.dash-title::after {
+  content: ''; flex: 1; height: 1px;
+  background: rgba(255,255,255,0.05);
+}
 
-    .pin-text {
-      font-size: 0.85rem;
-      color: #cfcfcf;
-      word-break: break-word;
-      white-space: pre-wrap;
-      margin-bottom: 12px;
-      line-height: 1.4;
-    }
+.stats-row { display: flex; gap: 0; border: 1px solid rgba(255,255,255,0.05); }
+.stat-block {
+  flex: 1; padding: 20px 24px;
+  border-right: 1px solid rgba(255,255,255,0.05);
+}
+.stat-block:last-child { border-right: none; }
+.stat-label {
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(255,255,255,0.15); margin-bottom: 10px;
+}
+.stat-num {
+  font-size: 28px; font-weight: 300;
+  color: rgba(255,255,255,0.55); letter-spacing: -1px;
+}
+.stat-num.active { color: rgba(255,255,255,0.8); }
 
-    .pin-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.65rem;
-      color: #8a8a8a;
-      letter-spacing: 0.3px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-      padding-top: 10px;
-      margin-top: 4px;
-    }
+/* ── SECTION ── */
+.section-row {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px; margin-top: 44px;
+}
+.section-label {
+  font-size: 8px; letter-spacing: 4px; text-transform: uppercase;
+  color: rgba(255,255,255,0.15);
+}
 
-    .delete-pin {
-      background: none;
-      border: none;
-      color: #8f8f8f;
-      font-size: 0.7rem;
-      padding: 4px 8px;
-      border-radius: 30px;
-    }
+/* ── VAULT LIST ── */
+.vault-item {
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 0;
+  margin-bottom: 1px;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+  animation: slideUp 0.3s ease forwards;
+}
+.vault-item:hover { border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.015); }
 
-    .delete-pin:hover {
-      background: rgba(255, 70, 70, 0.2);
-      color: #ff8888;
-    }
+.vault-row {
+  display: flex; align-items: center;
+  padding: 16px 20px; gap: 16px;
+}
+.vault-icon-cell {
+  font-size: 16px; width: 28px; text-align: center; flex-shrink: 0;
+}
+.vault-name-cell { flex: 1; min-width: 0; }
+.vault-name {
+  font-size: 12px; color: rgba(255,255,255,0.65); letter-spacing: 0.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vault-meta {
+  font-size: 9px; letter-spacing: 1px; color: rgba(255,255,255,0.2);
+  margin-top: 3px;
+}
+.vault-tag {
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  padding: 3px 8px; border: 1px solid;
+  flex-shrink: 0;
+}
+.tag-private { border-color: rgba(255,255,255,0.1); color: rgba(255,255,255,0.2); }
+.tag-gated { border-color: rgba(255,200,100,0.2); color: rgba(255,200,100,0.45); }
 
-    /* create modal */
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.82);
-      backdrop-filter: blur(12px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      opacity: 0;
-      visibility: hidden;
-      transition: 0.2s;
-    }
+.vault-actions-cell {
+  display: flex; gap: 6px; flex-shrink: 0;
+  opacity: 0; transition: opacity 0.15s;
+}
+.vault-item:hover .vault-actions-cell { opacity: 1; }
 
-    .modal.active {
-      opacity: 1;
-      visibility: visible;
-    }
+/* ── EMPTY ── */
+.empty-msg {
+  padding: 52px 0; text-align: center;
+  font-size: 10px; letter-spacing: 3px;
+  color: rgba(255,255,255,0.08); text-transform: uppercase;
+}
 
-    .modal-content {
-      background: #141416;
-      border-radius: 36px;
-      max-width: 500px;
-      width: 90%;
-      padding: 28px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 25px 40px rgba(0, 0, 0, 0.5);
-    }
+/* ────────────────────── VAULT DETAIL ────────────────────── */
+#view-detail { display: none; }
 
-    .modal-content h3 {
-      font-size: 1.3rem;
-      margin-bottom: 20px;
-      font-weight: 500;
-    }
+.detail-nav {
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.2); cursor: pointer; margin-bottom: 36px;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: color 0.2s; background: none; border: none;
+  font-family: inherit; padding: 0;
+}
+.detail-nav:hover { color: rgba(255,255,255,0.5); }
 
-    .modal-content input, .modal-content textarea {
-      width: 100%;
-      background: #0c0c0e;
-      border: 1px solid #2a2a2e;
-      border-radius: 20px;
-      padding: 12px 16px;
-      color: white;
-      font-family: inherit;
-      margin-bottom: 16px;
-      resize: vertical;
-    }
+.detail-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 20px;
+  margin-bottom: 40px; flex-wrap: wrap;
+}
+.detail-title-group { display: flex; align-items: flex-start; gap: 16px; }
+.detail-icon { font-size: 22px; margin-top: 2px; }
+.detail-name {
+  font-size: 16px; font-weight: 300; letter-spacing: 1px;
+  color: rgba(255,255,255,0.7);
+}
+.detail-desc {
+  font-size: 10px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.2); margin-top: 5px;
+}
+.detail-actions { display: flex; gap: 8px; }
 
-    .modal-content textarea {
-      min-height: 80px;
-    }
+/* ── SHARE BOX ── */
+.share-box {
+  border: 1px solid rgba(255,200,100,0.1);
+  padding: 20px 22px; margin-bottom: 28px;
+}
+.share-box-header {
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(255,200,100,0.35); margin-bottom: 14px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.share-link-row {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(255,255,255,0.02);
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.share-link-text {
+  flex: 1; font-size: 10px; letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.25); overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.conditions-mini { margin-top: 14px; }
+.conditions-mini-label {
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.15); margin-bottom: 8px;
+}
+.cond-line {
+  font-size: 10px; color: rgba(255,255,255,0.25);
+  padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex; align-items: flex-start; gap: 8px;
+}
+.cond-line::before { content: '—'; color: rgba(255,255,255,0.1); flex-shrink: 0; }
 
-    .modal-buttons {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-top: 8px;
-    }
+/* ── KEYS TABLE ── */
+.keys-table { border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px; }
+.keys-thead {
+  display: grid; grid-template-columns: 1fr 2fr 88px;
+  padding: 10px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.01);
+  font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(255,255,255,0.1);
+}
+.key-row {
+  display: grid; grid-template-columns: 1fr 2fr 88px;
+  padding: 13px 18px; gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  align-items: center; transition: background 0.15s;
+}
+.key-row:last-child { border-bottom: none; }
+.key-row:hover { background: rgba(255,255,255,0.015); }
+.key-label-cell {
+  font-size: 11px; color: rgba(255,255,255,0.45);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.key-val-cell {
+  font-size: 11px; color: rgba(255,255,255,0.2);
+  cursor: pointer; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; letter-spacing: 1px; transition: color 0.2s;
+  user-select: none;
+}
+.key-val-cell.revealed { color: rgba(255,255,255,0.55); letter-spacing: 0.3px; }
+.key-val-cell:hover { color: rgba(255,255,255,0.4); }
+.key-row-btns { display: flex; gap: 4px; justify-content: flex-end; }
 
-    /* auth overlay */
-    .auth-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #000000e6;
-      backdrop-filter: blur(16px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-      transition: all 0.2s;
-    }
+/* ────────────────────── PANEL / MODAL ────────────────────── */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px); z-index: 100;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
 
-    .auth-card {
-      background: #0f0f12;
-      border-radius: 48px;
-      padding: 40px 32px;
-      width: 340px;
-      text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 30px 40px rgba(0,0,0,0.6);
-    }
+.panel {
+  background: #080808; border: 1px solid rgba(255,255,255,0.07);
+  border-bottom: none;
+  width: 100%; max-width: 480px;
+  padding: 32px 28px 28px;
+  transform: translateY(20px); transition: transform 0.25s;
+  max-height: 85vh; overflow-y: auto;
+}
+.overlay.open .panel { transform: translateY(0); }
 
-    .auth-card input {
-      background: #1a1a1f;
-      border: 1px solid #2c2c32;
-      border-radius: 44px;
-      padding: 12px 20px;
-      width: 100%;
-      margin-bottom: 16px;
-      color: white;
-    }
+.panel-title {
+  font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+  color: rgba(255,255,255,0.3); margin-bottom: 28px;
+}
+.panel-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: rgba(255,255,255,0.15); cursor: pointer;
+  background: none; border: 1px solid rgba(255,255,255,0.07);
+  font-family: inherit; transition: all 0.2s;
+}
+.panel-close:hover { color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.15); }
 
-    .error-msg {
-      color: #ff8989;
-      font-size: 0.7rem;
-      margin: 8px 0;
-    }
+.form-field { margin-bottom: 22px; }
+.form-label {
+  font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(255,255,255,0.2); display: block; margin-bottom: 8px;
+}
+.form-err {
+  font-size: 9px; letter-spacing: 1px; color: rgba(255,80,80,0.55);
+  margin-top: 14px; min-height: 12px;
+}
 
-    /* empty state */
-    .empty-board {
-      text-align: center;
-      padding: 80px 20px;
-      color: rgba(255,255,255,0.3);
-      font-size: 0.9rem;
-    }
+/* emoji row */
+.emoji-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.emoji-opt {
+  font-size: 18px; cursor: pointer; padding: 5px 6px;
+  border: 1px solid transparent; border-radius: 0;
+  transition: border-color 0.15s, background 0.15s;
+  line-height: 1;
+}
+.emoji-opt:hover { border-color: rgba(255,255,255,0.1); }
+.emoji-opt.selected { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.04); }
 
-    @media (max-width: 1000px) {
-      .masonry { column-count: 3; }
-    }
-    @media (max-width: 700px) {
-      .masonry { column-count: 2; }
-      .navbar { flex-direction: column; align-items: stretch; }
-      .nav-actions { justify-content: space-between; }
-    }
+/* conditions list */
+.cond-list { margin-bottom: 10px; }
+.cond-edit-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 11px; color: rgba(255,255,255,0.35);
+}
+.cond-edit-num {
+  font-size: 9px; color: rgba(255,255,255,0.15);
+  width: 16px; flex-shrink: 0;
+}
+.cond-edit-text { flex: 1; }
+.cond-remove {
+  background: none; border: none; color: rgba(255,80,80,0.25);
+  cursor: pointer; font-size: 12px; transition: color 0.15s;
+  font-family: inherit;
+}
+.cond-remove:hover { color: rgba(255,80,80,0.6); }
+.cond-add-row { display: flex; gap: 8px; align-items: flex-end; }
+.cond-add-row input { font-size: 11px; }
 
-    .loader {
-      text-align: center;
-      padding: 40px;
-      color: #aaa;
-    }
-  </style>
+/* ────────────────────── GATE PAGE ────────────────────── */
+#page-gate {
+  display: none; min-height: 100vh;
+  align-items: center; justify-content: center;
+  flex-direction: column; padding: 40px 20px;
+}
+
+.gate-shell {
+  width: 100%; max-width: 440px;
+}
+.gate-wordmark {
+  font-size: 10px; letter-spacing: 6px; text-transform: lowercase;
+  color: rgba(255,255,255,0.1); margin-bottom: 44px; text-align: center;
+}
+.gate-wordmark span { color: rgba(255,255,255,0.35); }
+
+.gate-vault-head { margin-bottom: 32px; }
+.gate-icon { font-size: 24px; margin-bottom: 12px; }
+.gate-vault-name {
+  font-size: 14px; font-weight: 300;
+  color: rgba(255,255,255,0.6); letter-spacing: 1px; margin-bottom: 6px;
+}
+.gate-vault-desc { font-size: 10px; letter-spacing: 1px; color: rgba(255,255,255,0.2); }
+
+.gate-note {
+  font-size: 9px; letter-spacing: 2px; color: rgba(255,200,100,0.3);
+  text-transform: uppercase; margin-bottom: 20px;
+  border-left: 2px solid rgba(255,200,100,0.15); padding-left: 10px;
+}
+
+.gate-cond-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 13px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer; transition: opacity 0.2s;
+}
+.gate-cond-item:last-child { border-bottom: none; }
+.gate-check {
+  width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px;
+  border: 1px solid rgba(255,255,255,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; color: transparent;
+  transition: all 0.2s;
+}
+.gate-check.done { border-color: rgba(255,255,255,0.4); color: rgba(255,255,255,0.7); }
+.gate-cond-text { font-size: 11px; color: rgba(255,255,255,0.35); line-height: 1.5; flex: 1; }
+
+.gate-sep { height: 1px; background: rgba(255,255,255,0.05); margin: 28px 0; }
+
+.gate-reveal-box {
+  border: 1px solid rgba(255,255,255,0.07);
+  display: none;
+  animation: slideUp 0.4s ease forwards;
+}
+.gate-reveal-header {
+  padding: 12px 16px;
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(255,255,255,0.2);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.gate-key-row {
+  display: grid; grid-template-columns: 120px 1fr auto;
+  padding: 11px 16px; gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  align-items: center;
+}
+.gate-key-row:last-child { border-bottom: none; }
+.gate-key-label { font-size: 10px; color: rgba(255,255,255,0.25); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gate-key-value { font-size: 10px; color: rgba(255,255,255,0.55); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ────────────────────── LOADING ────────────────────── */
+#page-loading {
+  height: 100vh; display: flex; align-items: center; justify-content: center;
+}
+.loading-dot {
+  width: 3px; height: 3px; background: rgba(255,255,255,0.15);
+  border-radius: 50%; animation: pulse 1.2s ease infinite;
+}
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(10px);
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  padding: 9px 20px; font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.35); opacity: 0; transition: all 0.25s; z-index: 999;
+  white-space: nowrap;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast.ok { color: rgba(200,255,200,0.5); border-color: rgba(200,255,200,0.1); }
+#toast.bad { color: rgba(255,100,100,0.6); border-color: rgba(255,100,100,0.15); }
+
+/* ── DIVIDER ── */
+.rule { height: 1px; background: rgba(255,255,255,0.04); margin: 24px 0; }
+
+/* ── DELETE CONFIRM ── */
+.del-panel { max-width: 360px; }
+.del-label {
+  font-size: 11px; color: rgba(255,255,255,0.35); line-height: 1.6; margin-bottom: 22px;
+}
+.del-actions { display: flex; gap: 10px; }
+
+/* responsive */
+@media(max-width:600px){
+  .topbar { padding: 0 16px; }
+  .main { padding: 36px 16px 60px; }
+  .stats-row { flex-direction: column; }
+  .stat-block { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .stat-block:last-child { border-bottom: none; }
+  .detail-header { flex-direction: column; }
+  .vault-actions-cell { opacity: 1; }
+}
+</style>
 </head>
 <body>
-<div id="root" class="app"></div>
+
+<!-- LOADING -->
+<div id="page-loading">
+  <div class="loading-dot"></div>
+</div>
+
+<!-- AUTH -->
+<div id="page-auth" style="display:none">
+  <div class="auth-box fade-in">
+    <div class="auth-wordmark">lies<span>.lat</span></div>
+    <div id="auth-name-field" class="field-wrap" style="width:100%;display:none">
+      <input type="text" id="a-name" placeholder="display name">
+      <div class="field-line"></div>
+    </div>
+    <div class="field-wrap" style="width:100%">
+      <input type="email" id="a-email" placeholder="email" autocomplete="email">
+      <div class="field-line"></div>
+    </div>
+    <div class="field-wrap" style="width:100%">
+      <input type="password" id="a-pass" placeholder="password" autocomplete="current-password">
+      <div class="field-line"></div>
+    </div>
+    <div class="auth-err" id="auth-err"></div>
+    <button class="btn fade-in-delay" id="auth-submit-btn" onclick="authSubmit()">enter</button>
+    <div class="auth-sub fade-in-delay2" id="auth-switch" onclick="authSwitch()">create account</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="page-app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="wordmark">lies<span>.lat</span></div>
+      <div class="topbar-sep"></div>
+      <div class="topbar-user" id="topbar-user"></div>
+    </div>
+    <div class="topbar-right">
+      <button class="topbar-signout" onclick="doSignOut()">sign out</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- DASHBOARD -->
+    <div id="view-dash">
+      <div class="dash-header fade-in">
+        <div class="dash-title">vaults</div>
+        <div class="stats-row">
+          <div class="stat-block">
+            <div class="stat-label">vaults</div>
+            <div class="stat-num active" id="s-vaults">0</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-label">keys stored</div>
+            <div class="stat-num" id="s-keys">0</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-label">gated</div>
+            <div class="stat-num" id="s-gated">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-row fade-in-delay">
+        <div class="section-label">all vaults</div>
+        <button class="btn btn-sm btn-accent" onclick="openCreateVault()">+ new vault</button>
+      </div>
+      <div id="vault-list"><div class="empty-msg">loading</div></div>
+    </div>
+
+    <!-- DETAIL -->
+    <div id="view-detail">
+      <button class="detail-nav" onclick="backToDash()">← vaults</button>
+      <div class="detail-header">
+        <div class="detail-title-group">
+          <div class="detail-icon" id="d-icon">🔑</div>
+          <div>
+            <div class="detail-name" id="d-name"></div>
+            <div class="detail-desc" id="d-desc"></div>
+          </div>
+        </div>
+        <div class="detail-actions">
+          <button class="btn btn-sm btn-accent" onclick="openAddKey()">+ key</button>
+          <button class="btn btn-sm" onclick="openEditCurrentVault()">edit</button>
+        </div>
+      </div>
+
+      <div id="d-share-box"></div>
+      <div class="keys-table" id="d-keys-table">
+        <div class="keys-thead"><span>label</span><span>value</span><span></span></div>
+        <div id="d-keys-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GATE PAGE -->
+<div id="page-gate" style="display:none">
+  <div class="gate-shell">
+    <div class="gate-wordmark fade-in">lies<span>.lat</span></div>
+    <div id="gate-inner"></div>
+  </div>
+</div>
+
+<!-- PANELS / OVERLAYS -->
+<!-- vault panel -->
+<div class="overlay" id="ov-vault" onclick="ovClose('ov-vault',event)">
+  <div class="panel" style="position:relative">
+    <button class="panel-close" onclick="closeOv('ov-vault')">✕</button>
+    <div class="panel-title" id="vp-title">new vault</div>
+
+    <div class="form-field">
+      <label class="form-label">name</label>
+      <div class="field-wrap"><input type="text" id="vp-name" placeholder="api keys, passwords…"><div class="field-line"></div></div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">description</label>
+      <div class="field-wrap"><input type="text" id="vp-desc" placeholder="optional"><div class="field-line"></div></div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">icon</label>
+      <div id="vp-icon-display" style="font-size:20px;cursor:pointer;margin-bottom:6px" onclick="toggleEmojiRow()">🔑</div>
+      <div class="emoji-row" id="emoji-row" style="display:none">
+        <span class="emoji-opt selected" onclick="pickEmoji('🔑')">🔑</span>
+        <span class="emoji-opt" onclick="pickEmoji('🗝️')">🗝️</span>
+        <span class="emoji-opt" onclick="pickEmoji('🔐')">🔐</span>
+        <span class="emoji-opt" onclick="pickEmoji('🔒')">🔒</span>
+        <span class="emoji-opt" onclick="pickEmoji('🛡️')">🛡️</span>
+        <span class="emoji-opt" onclick="pickEmoji('⚡')">⚡</span>
+        <span class="emoji-opt" onclick="pickEmoji('🚀')">🚀</span>
+        <span class="emoji-opt" onclick="pickEmoji('💾')">💾</span>
+        <span class="emoji-opt" onclick="pickEmoji('🤖')">🤖</span>
+        <span class="emoji-opt" onclick="pickEmoji('🌐')">🌐</span>
+        <span class="emoji-opt" onclick="pickEmoji('🧬')">🧬</span>
+        <span class="emoji-opt" onclick="pickEmoji('💎')">💎</span>
+      </div>
+    </div>
+
+    <div class="rule"></div>
+
+    <div class="form-field">
+      <label class="form-label">gated share link</label>
+      <div class="toggle-wrap" onclick="toggleGated()">
+        <div class="toggle-track" id="vp-toggle"></div>
+        <span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.25)">generate a public link with unlock conditions</span>
+      </div>
+    </div>
+
+    <div id="vp-cond-section" style="display:none">
+      <div class="form-field">
+        <label class="form-label">conditions to unlock</label>
+        <div class="cond-list" id="vp-cond-list"></div>
+        <div class="cond-add-row">
+          <div class="field-wrap" style="flex:1">
+            <input type="text" id="vp-new-cond" placeholder="e.g. follow on twitter…" maxlength="120">
+            <div class="field-line"></div>
+          </div>
+          <button class="btn btn-xs" onclick="addCond()">add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="rule"></div>
+    <button class="btn btn-full btn-accent" id="vp-save-btn" onclick="saveVault()">create vault</button>
+    <div class="form-err" id="vp-err"></div>
+  </div>
+</div>
+
+<!-- key panel -->
+<div class="overlay" id="ov-key" onclick="ovClose('ov-key',event)">
+  <div class="panel" style="position:relative">
+    <button class="panel-close" onclick="closeOv('ov-key')">✕</button>
+    <div class="panel-title">add key</div>
+    <div class="form-field">
+      <label class="form-label">label</label>
+      <div class="field-wrap"><input type="text" id="kp-name" placeholder="openai api key…"><div class="field-line"></div></div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">value / secret</label>
+      <div class="field-wrap"><input type="text" id="kp-value" placeholder="sk-…"><div class="field-line"></div></div>
+    </div>
+    <button class="btn btn-full btn-accent" id="kp-save-btn" onclick="saveKey()">save</button>
+    <div class="form-err" id="kp-err"></div>
+  </div>
+</div>
+
+<!-- delete confirm -->
+<div class="overlay" id="ov-del" onclick="ovClose('ov-del',event)">
+  <div class="panel del-panel" style="position:relative">
+    <button class="panel-close" onclick="closeOv('ov-del')">✕</button>
+    <div class="panel-title">confirm delete</div>
+    <div class="del-label" id="del-label">this cannot be undone.</div>
+    <div class="del-actions">
+      <button class="btn" onclick="closeOv('ov-del')" style="flex:1">cancel</button>
+      <button class="btn btn-dim" id="del-confirm-btn" onclick="execDelete()" style="flex:1">delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- setup notice -->
+<div class="overlay" id="ov-setup" onclick="ovClose('ov-setup',event)">
+  <div class="panel" style="position:relative;max-width:560px">
+    <button class="panel-close" onclick="closeOv('ov-setup')">✕</button>
+    <div class="panel-title">one-time setup</div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.25);line-height:1.8;margin-bottom:16px">
+      run this sql in your <a href="https://supabase.com/dashboard/project/sfwyhxwtqswblfnixzdo/sql" target="_blank" style="color:rgba(255,255,255,0.45)">supabase sql editor</a> to create the required tables:
+    </div>
+    <div id="sql-block" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);padding:14px;font-size:10px;line-height:1.9;color:rgba(255,255,255,0.3);white-space:pre-wrap;overflow-x:auto;margin-bottom:16px"></div>
+    <button class="btn btn-accent" onclick="copySetupSQL()">copy sql</button>
+  </div>
+</div>
+
+<div id="toast"></div>
 
 <script>
-  // ---------- SUPABASE CLIENT ----------
-  const SUPABASE_URL = 'https://ssddpeplnanvnlkrsnjh.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_gG27LVBTwhPXkutZvNiEKQ_JL3sO9OD';
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ══════════════════════════════════════════════
+//  SUPABASE
+// ══════════════════════════════════════════════
+const SB_URL = 'https://sfwyhxwtqswblfnixzdo.supabase.co';
+const SB_KEY = 'sb_publishable_Tp_CRnvCEyUPfTRt5JrVWQ_j5bD-gdt';
+const { createClient } = supabase;
+const sb = createClient(SB_URL, SB_KEY);
 
-  // ---------- GLOBAL STATE ----------
-  let currentUser = null;        // { id, email }
-  let pins = [];                 // array of pin objects
-  let loadingPins = false;
-
-  // DOM references
-  let appContainer = document.getElementById('root');
-  let authOverlay = null;
-
-  // Helper: render everything
-  function render() {
-    if (!currentUser) {
-      renderAuthScreen();
-    } else {
-      renderMainApp();
-    }
-  }
-
-  // ---------- AUTH UI (login / register) ----------
-  function renderAuthScreen() {
-    appContainer.innerHTML = `
-      <div class="auth-overlay" id="authOverlay">
-        <div class="auth-card">
-          <div style="font-size: 28px; margin-bottom: 8px;">📌</div>
-          <div style="font-weight: 500; margin-bottom: 24px; letter-spacing: -0.2px;">pin.lies</div>
-          <input type="email" id="authEmail" placeholder="Email" autocomplete="email">
-          <input type="password" id="authPassword" placeholder="Password" autocomplete="current-password">
-          <div id="authError" class="error-msg"></div>
-          <div style="display: flex; gap: 12px; margin-top: 16px;">
-            <button id="loginBtn" style="flex:1;">Log in</button>
-            <button id="registerBtn" style="flex:1;" class="btn-outline">Sign up</button>
-          </div>
-          <div class="text-muted" style="font-size: 0.65rem; margin-top: 24px; opacity:0.4">✨ post images, gifs & text</div>
-        </div>
-      </div>
-    `;
-
-    const loginBtn = document.getElementById('loginBtn');
-    const registerBtn = document.getElementById('registerBtn');
-    const authError = document.getElementById('authError');
-
-    async function handleAuth(mode) {
-      const email = document.getElementById('authEmail').value.trim();
-      const password = document.getElementById('authPassword').value;
-      authError.innerText = '';
-      if (!email || !password) {
-        authError.innerText = '✧ fill both email and password ✧';
-        return;
-      }
-      try {
-        let result;
-        if (mode === 'login') {
-          result = await supabase.auth.signInWithPassword({ email, password });
-        } else {
-          result = await supabase.auth.signUp({ email, password });
-        }
-        if (result.error) throw new Error(result.error.message);
-        const sessionUser = result.data.user;
-        if (sessionUser) {
-          currentUser = { id: sessionUser.id, email: sessionUser.email };
-          await fetchPins();     // load pins after login
-          render();
-        } else {
-          if (mode === 'register') authError.innerText = '✅ Check email to confirm? (demo auto-confirm if allowed)';
-          else authError.innerText = 'Login failed';
-        }
-      } catch (err) {
-        authError.innerText = err.message;
-      }
-    }
-
-    loginBtn.onclick = () => handleAuth('login');
-    registerBtn.onclick = () => handleAuth('register');
-  }
-
-  // ---------- FETCH PINS (real-time friendly) ----------
-  async function fetchPins() {
-    if (!currentUser) return;
-    loadingPins = true;
-    // re-render to show loader if needed (but we call after render)
-    try {
-      const { data, error } = await supabase
-        .from('pins')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      pins = data || [];
-    } catch (err) {
-      console.error('fetch pins error', err);
-      pins = [];
-    } finally {
-      loadingPins = false;
-      if (currentUser) renderMainApp(); // refresh UI after fetch
-    }
-  }
-
-  // create a new pin (media url + optional text)
-  async function createPin(mediaUrl, captionText) {
-    if (!currentUser) return false;
-    if (!mediaUrl || mediaUrl.trim() === '') {
-      alert('Please paste a valid image or GIF url');
-      return false;
-    }
-    // simple url check (must start with http)
-    if (!mediaUrl.startsWith('http://') && !mediaUrl.startsWith('https://')) {
-      alert('URL must start with http:// or https://');
-      return false;
-    }
-    const newPin = {
-      user_id: currentUser.id,
-      user_email: currentUser.email,
-      media_url: mediaUrl.trim(),
-      caption: captionText?.trim() || '',
-      created_at: new Date().toISOString(),
-    };
-    try {
-      const { data, error } = await supabase.from('pins').insert([newPin]).select();
-      if (error) throw error;
-      if (data && data.length) {
-        pins = [data[0], ...pins];   // prepend
-        renderMainApp();
-      }
-      return true;
-    } catch (err) {
-      alert('Failed to post: ' + err.message);
-      return false;
-    }
-  }
-
-  async function deletePin(pinId) {
-    if (!currentUser) return;
-    try {
-      const { error } = await supabase.from('pins').delete().eq('id', pinId).eq('user_id', currentUser.id);
-      if (error) throw error;
-      pins = pins.filter(p => p.id !== pinId);
-      renderMainApp();
-    } catch (err) {
-      alert("Can't delete: " + err.message);
-    }
-  }
-
-  // ---------- MAIN BOARD (Pinterest-like) ----------
-  function renderMainApp() {
-    if (!currentUser) return;
-
-    const isPinsEmpty = (!loadingPins && pins.length === 0);
-    const masonryHtml = loadingPins ? `<div class="loader">loading pixels...</div>` : 
-      (pins.length === 0 ? `<div class="empty-board">🌀 no pins yet · paste an image or gif url to start</div>` :
-      `<div class="masonry">
-        ${pins.map(pin => `
-          <div class="pin-card" data-pin-id="${pin.id}">
-            <div class="pin-media" onclick="window.open('${escapeHtml(pin.media_url)}', '_blank')">
-              ${pin.media_url.match(/\.(mp4|webm|mov)/i) ? 
-                `<video src="${escapeHtml(pin.media_url)}" autoplay loop muted playsinline></video>` : 
-                `<img src="${escapeHtml(pin.media_url)}" alt="pin" loading="lazy" onerror="this.src='https://placehold.co/600x400/222/555?text=broken+link'">`
-              }
-            </div>
-            <div class="pin-info">
-              <div class="pin-text">${escapeHtml(pin.caption || '')}</div>
-              <div class="pin-meta">
-                <span>📌 ${escapeHtml(pin.user_email?.split('@')[0] || 'user')}</span>
-                ${pin.user_id === currentUser.id ? `<button class="delete-pin" data-id="${pin.id}">✕ delete</button>` : ''}
-              </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>`);
-
-    appContainer.innerHTML = `
-      <div class="app">
-        <div class="navbar">
-          <div class="logo">📌 pin.lies — visual archive</div>
-          <div class="nav-actions">
-            <span class="user-greeting">✧ ${escapeHtml(currentUser.email?.split('@')[0] || currentUser.id)}</span>
-            <button id="newPostBtn" class="btn-primary">+ new pin</button>
-            <button id="logoutBtn">logout</button>
-          </div>
-        </div>
-        <div class="board">
-          ${masonryHtml}
-        </div>
-      </div>
-      <!-- Modal for creating pin -->
-      <div id="pinModal" class="modal">
-        <div class="modal-content">
-          <h3>paste image or GIF link</h3>
-          <input type="text" id="mediaUrlInput" placeholder="https://... .jpg / .png / .gif" autocomplete="off">
-          <textarea id="captionInput" placeholder="add a short description (optional)"></textarea>
-          <div class="modal-buttons">
-            <button id="modalCancel">cancel</button>
-            <button id="modalSubmit" class="btn-primary">post to board</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    // attach modal handlers
-    const modal = document.getElementById('pinModal');
-    const newBtn = document.getElementById('newPostBtn');
-    const cancelBtn = document.getElementById('modalCancel');
-    const submitBtn = document.getElementById('modalSubmit');
-
-    function openModal() { modal.classList.add('active'); }
-    function closeModal() { modal.classList.remove('active'); }
-
-    newBtn?.addEventListener('click', openModal);
-    cancelBtn?.addEventListener('click', closeModal);
-    submitBtn?.addEventListener('click', async () => {
-      const urlInput = document.getElementById('mediaUrlInput');
-      const captionText = document.getElementById('captionInput');
-      const url = urlInput.value.trim();
-      const caption = captionText.value;
-      if (!url) {
-        alert("please provide image/gif url");
-        return;
-      }
-      const success = await createPin(url, caption);
-      if (success) {
-        closeModal();
-        urlInput.value = '';
-        captionText.value = '';
-      }
-    });
-    // close modal on outside click
-    modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-
-    // delete listeners
-    document.querySelectorAll('.delete-pin').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const pinId = btn.getAttribute('data-id');
-        if (pinId && confirm('remove this pin?')) deletePin(pinId);
-      });
-    });
-
-    // Logout handler
-    document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-      await supabase.auth.signOut();
-      currentUser = null;
-      pins = [];
-      render();
-    });
-  }
-
-  // utils
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-      if (m === '&') return '&amp;';
-      if (m === '<') return '&lt;';
-      if (m === '>') return '&gt;';
-      return m;
-    }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-      return c;
-    });
-  }
-
-  // ---------- SUPABASE AUTH STATE LISTENER + TABLE CHECK/CREATION hint ----------
-  async function initApp() {
-    // check current session
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      currentUser = { id: session.user.id, email: session.user.email };
-      await fetchPins();
-      render();
-    } else {
-      render();
-    }
-
-    // Listen for auth changes
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        currentUser = { id: session.user.id, email: session.user.email };
-        await fetchPins();
-        render();
-      } else if (event === 'SIGNED_OUT') {
-        currentUser = null;
-        pins = [];
-        render();
-      }
-    });
-  }
-
-  // ---------- ensure 'pins' table exists (manual info prompt but we create it via UI if missing, show error) ----------
-  // supabase realtime: we will try to insert/fetch; if table missing, show friendly error to set up table.
-  // but we provide user instructions in console/alert to create pins table.
-  // override fetchPins to handle missing table error once
-  const originalFetch = fetchPins;
-  window.fetchPins = fetchPins;
-  fetchPins = async function() {
-    if (!currentUser) return;
-    loadingPins = true;
-    if (currentUser && !loadingPins) renderMainApp();
-    try {
-      const { data, error } = await supabase
-        .from('pins')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) {
-        if (error.message.includes('relation') && error.message.includes('does not exist')) {
-          alert(`⚠️ Database table "pins" missing.\n\nCreate table in Supabase SQL editor:\n
-CREATE TABLE pins (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id uuid NOT NULL,
-  user_email text,
-  media_url text NOT NULL,
-  caption text,
-  created_at timestamptz DEFAULT now()
+const SQL = `create table vaults (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users not null,
+  name text not null,
+  description text,
+  icon text default '🔑',
+  is_gated boolean default false,
+  conditions jsonb default '[]',
+  created_at timestamptz default now()
 );
-ALTER TABLE pins ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Enable all for authenticated users" ON pins
-  USING (auth.role() = 'authenticated');
-CREATE POLICY "Users can delete own pins" ON pins
-  FOR DELETE USING (auth.uid() = user_id);
-          `);
-          pins = [];
-        } else throw error;
-      } else {
-        pins = data || [];
-      }
-    } catch (err) {
-      console.error(err);
-      pins = [];
-    } finally {
-      loadingPins = false;
-      if (currentUser) renderMainApp();
-    }
-  }.bind(this);
 
-  // patch createPin also to show table error gracefully
-  const originalCreate = createPin;
-  window.createPin = createPin;
-  createPin = async function(mediaUrl, captionText) {
-    if (!currentUser) return false;
-    if (!mediaUrl.trim()) { alert("url required"); return false; }
-    try {
-      const newPin = {
-        user_id: currentUser.id,
-        user_email: currentUser.email,
-        media_url: mediaUrl.trim(),
-        caption: captionText?.trim() || '',
-        created_at: new Date().toISOString(),
-      };
-      const { data, error } = await supabase.from('pins').insert([newPin]).select();
-      if (error) {
-        if (error.message.includes('does not exist')) {
-          alert("❌ Table 'pins' missing. Please create it via SQL editor (check console instructions).");
-        } else throw error;
-        return false;
-      }
-      if (data) {
-        pins = [data[0], ...pins];
-        renderMainApp();
-        return true;
-      }
-      return false;
-    } catch (err) {
-      alert("post error: " + err.message);
-      return false;
-    }
+create table vault_keys (
+  id uuid default gen_random_uuid() primary key,
+  vault_id uuid references vaults(id) on delete cascade not null,
+  user_id uuid references auth.users not null,
+  key_name text not null,
+  key_value text not null,
+  created_at timestamptz default now()
+);
+
+alter table vaults enable row level security;
+alter table vault_keys enable row level security;
+
+create policy "owner_vaults" on vaults
+  for all using (auth.uid() = user_id);
+
+create policy "owner_keys" on vault_keys
+  for all using (auth.uid() = user_id);
+
+create policy "public_gated_vaults" on vaults
+  for select using (is_gated = true);
+
+create policy "public_gated_keys" on vault_keys
+  for select using (
+    exists (select 1 from vaults v where v.id = vault_id and v.is_gated = true)
+  );`;
+
+document.getElementById('sql-block').textContent = SQL;
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let me = null;
+let vaults = [];
+let currentVaultId = null;
+let editingVaultId = null;
+let pendingDelete = null;
+let authMode = 'login'; // 'login' | 'signup'
+let vpGated = false;
+let vpEmoji = '🔑';
+let vpConds = [];
+
+// ══════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════
+(async () => {
+  const hash = location.hash;
+  if (hash.startsWith('#vault/')) {
+    showPage('gate');
+    renderGate(hash.slice(7));
+    return;
+  }
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) { me = session.user; showApp(); }
+  else showPage('auth');
+
+  sb.auth.onAuthStateChange((ev, sess) => {
+    if (ev === 'SIGNED_IN' && sess) { me = sess.user; showApp(); }
+    if (ev === 'SIGNED_OUT') { me = null; showPage('auth'); }
+  });
+})();
+
+window.addEventListener('hashchange', () => {
+  const h = location.hash;
+  if (h.startsWith('#vault/')) { showPage('gate'); renderGate(h.slice(7)); }
+  else if (!h && me) { showPage('app'); }
+});
+
+// ══════════════════════════════════════════════
+//  PAGE ROUTING
+// ══════════════════════════════════════════════
+function showPage(p) {
+  document.getElementById('page-loading').style.display = 'none';
+  document.getElementById('page-auth').style.display = p==='auth'?'flex':'none';
+  document.getElementById('page-app').style.display = p==='app'?'block':'none';
+  document.getElementById('page-gate').style.display = p==='gate'?'flex':'none';
+}
+
+function showView(v) {
+  document.getElementById('view-dash').style.display = v==='dash'?'block':'none';
+  document.getElementById('view-detail').style.display = v==='detail'?'block':'none';
+}
+
+// ══════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════
+document.querySelectorAll('#page-auth input').forEach(el =>
+  el.addEventListener('keydown', e => { if (e.key==='Enter') authSubmit(); }));
+
+function authSwitch() {
+  authMode = authMode==='login'?'signup':'login';
+  document.getElementById('auth-switch').textContent = authMode==='login'?'create account':'sign in';
+  document.getElementById('auth-submit-btn').textContent = authMode==='login'?'enter':'create';
+  document.getElementById('auth-name-field').style.display = authMode==='signup'?'block':'none';
+  document.getElementById('auth-err').textContent = '';
+}
+
+async function authSubmit() {
+  const email = document.getElementById('a-email').value.trim();
+  const pass  = document.getElementById('a-pass').value;
+  const name  = document.getElementById('a-name').value.trim();
+  const errEl = document.getElementById('auth-err');
+  errEl.textContent = '';
+  if (!email||!pass) { errEl.textContent = 'fill in both fields'; return; }
+
+  const btn = document.getElementById('auth-submit-btn');
+  btn.disabled = true; btn.textContent = '…';
+
+  let error;
+  if (authMode === 'login') {
+    ({ error } = await sb.auth.signInWithPassword({ email, password: pass }));
+  } else {
+    if (pass.length < 6) { errEl.textContent = 'password min 6 chars'; btn.disabled=false; btn.textContent='create'; return; }
+    ({ error } = await sb.auth.signUp({ email, password: pass, options:{ data:{ display_name: name||email.split('@')[0] } } }));
+  }
+  btn.disabled = false;
+  btn.textContent = authMode==='login'?'enter':'create';
+  if (error) errEl.textContent = error.message.toLowerCase();
+}
+
+async function doSignOut() { await sb.auth.signOut(); }
+
+// ══════════════════════════════════════════════
+//  SHOW APP
+// ══════════════════════════════════════════════
+function showApp() {
+  showPage('app');
+  const name = me.user_metadata?.display_name || me.email.split('@')[0];
+  document.getElementById('topbar-user').textContent = name;
+  showView('dash');
+  loadVaults();
+}
+
+// ══════════════════════════════════════════════
+//  VAULTS
+// ══════════════════════════════════════════════
+async function loadVaults() {
+  setVaultList('<div class="empty-msg">loading</div>');
+  const { data, error } = await sb.from('vaults')
+    .select('*').eq('user_id', me.id).order('created_at',{ascending:false});
+
+  if (error) {
+    if (error.code === '42P01') { openOv('ov-setup'); setVaultList('<div class="empty-msg">setup required</div>'); return; }
+    toast(error.message,'bad'); return;
+  }
+  vaults = data || [];
+
+  // key counts
+  const { data: kc } = await sb.from('vault_keys').select('vault_id').eq('user_id',me.id);
+  const cm = {};
+  (kc||[]).forEach(r => cm[r.vault_id] = (cm[r.vault_id]||0)+1);
+  vaults.forEach(v => v._kc = cm[v.id]||0);
+
+  renderVaultList();
+  updateStats();
+}
+
+function updateStats() {
+  document.getElementById('s-vaults').textContent = vaults.length;
+  document.getElementById('s-keys').textContent = vaults.reduce((a,v)=>a+(v._kc||0),0);
+  document.getElementById('s-gated').textContent = vaults.filter(v=>v.is_gated).length;
+}
+
+function renderVaultList() {
+  if (!vaults.length) { setVaultList('<div class="empty-msg">no vaults yet</div>'); return; }
+  setVaultList(vaults.map((v,i) => `
+    <div class="vault-item" style="animation-delay:${i*40}ms" onclick="openVaultDetail('${v.id}')">
+      <div class="vault-row">
+        <div class="vault-icon-cell">${v.icon||'🔑'}</div>
+        <div class="vault-name-cell">
+          <div class="vault-name">${esc(v.name)}</div>
+          <div class="vault-meta">${v._kc} key${v._kc!==1?'s':''} &nbsp;·&nbsp; ${v.description?esc(v.description):'—'}</div>
+        </div>
+        <span class="vault-tag ${v.is_gated?'tag-gated':'tag-private'}">${v.is_gated?'gated':'private'}</span>
+        <div class="vault-actions-cell" onclick="event.stopPropagation()">
+          ${v.is_gated?`<button class="btn btn-xs" onclick="copyGateLink('${v.id}')">link</button>`:''}
+          <button class="btn btn-xs" onclick="openEditVault('${v.id}')">edit</button>
+          <button class="btn btn-xs btn-dim" onclick="promptDelVault('${v.id}','${esc(v.name)}')">del</button>
+        </div>
+      </div>
+    </div>`).join(''));
+}
+
+function setVaultList(h) { document.getElementById('vault-list').innerHTML = h; }
+
+// ══════════════════════════════════════════════
+//  VAULT DETAIL
+// ══════════════════════════════════════════════
+async function openVaultDetail(vid) {
+  currentVaultId = vid;
+  const v = vaults.find(x=>x.id===vid);
+  if (!v) return;
+  showView('detail');
+  document.getElementById('d-icon').textContent = v.icon||'🔑';
+  document.getElementById('d-name').textContent = v.name;
+  document.getElementById('d-desc').textContent = v.description||'—';
+  renderDetailShare(v);
+  await loadKeys(v);
+}
+
+function renderDetailShare(v) {
+  const box = document.getElementById('d-share-box');
+  if (!v.is_gated) { box.innerHTML=''; return; }
+  const link = `${location.origin}${location.pathname}#vault/${v.id}`;
+  const conds = v.conditions||[];
+  box.innerHTML = `
+    <div class="share-box">
+      <div class="share-box-header">
+        <span>gated link</span>
+        <button class="btn btn-xs" onclick="copyGateLink('${v.id}')">copy</button>
+      </div>
+      <div class="share-link-row">
+        <span class="share-link-text">${link}</span>
+      </div>
+      ${conds.length ? `
+        <div class="conditions-mini">
+          <div class="conditions-mini-label">conditions (${conds.length})</div>
+          ${conds.map(c=>`<div class="cond-line">${esc(c)}</div>`).join('')}
+        </div>` : '<div style="font-size:9px;letter-spacing:1px;color:rgba(255,200,100,0.25);margin-top:10px">no conditions — open to anyone with the link</div>'}
+    </div>`;
+}
+
+async function loadKeys(v) {
+  const { data, error } = await sb.from('vault_keys')
+    .select('*').eq('vault_id',v.id).eq('user_id',me.id)
+    .order('created_at',{ascending:false});
+  if (error) { toast(error.message,'bad'); return; }
+
+  const body = document.getElementById('d-keys-body');
+  if (!data||!data.length) {
+    body.innerHTML = '<div class="empty-msg" style="padding:32px 0">no keys</div>';
+    return;
+  }
+  body.innerHTML = data.map(k=>`
+    <div class="key-row">
+      <div class="key-label-cell">${esc(k.key_name)}</div>
+      <div class="key-val-cell" id="kvc-${k.id}" onclick="toggleReveal('${k.id}','${encodeURIComponent(k.key_value)}')">••••••••••</div>
+      <div class="key-row-btns">
+        <button class="btn btn-xs" onclick="cpKey('${encodeURIComponent(k.key_value)}')">copy</button>
+        <button class="btn btn-xs btn-dim" onclick="promptDelKey('${k.id}','${esc(k.key_name)}')">del</button>
+      </div>
+    </div>`).join('');
+}
+
+function toggleReveal(id, enc) {
+  const el = document.getElementById('kvc-'+id);
+  if (el.classList.contains('revealed')) {
+    el.textContent = '••••••••••'; el.classList.remove('revealed');
+  } else {
+    el.textContent = decodeURIComponent(enc); el.classList.add('revealed');
+  }
+}
+function cpKey(enc) { navigator.clipboard.writeText(decodeURIComponent(enc)); toast('copied','ok'); }
+
+function backToDash() {
+  showView('dash');
+  currentVaultId = null;
+  document.getElementById('d-share-box').innerHTML='';
+}
+
+// ══════════════════════════════════════════════
+//  CREATE / EDIT VAULT PANEL
+// ══════════════════════════════════════════════
+function openCreateVault() {
+  editingVaultId = null;
+  vpGated = false; vpEmoji = '🔑'; vpConds = [];
+  document.getElementById('vp-title').textContent = 'new vault';
+  document.getElementById('vp-save-btn').textContent = 'create vault';
+  document.getElementById('vp-name').value = '';
+  document.getElementById('vp-desc').value = '';
+  document.getElementById('vp-icon-display').textContent = '🔑';
+  document.getElementById('vp-toggle').className = 'toggle-track';
+  document.getElementById('vp-cond-section').style.display = 'none';
+  document.getElementById('vp-err').textContent = '';
+  renderCondList();
+  openOv('ov-vault');
+}
+
+function openEditVault(vid) {
+  const v = vaults.find(x=>x.id===vid);
+  if (!v) return;
+  editingVaultId = vid;
+  vpGated = v.is_gated; vpEmoji = v.icon||'🔑'; vpConds = [...(v.conditions||[])];
+  document.getElementById('vp-title').textContent = 'edit vault';
+  document.getElementById('vp-save-btn').textContent = 'save changes';
+  document.getElementById('vp-name').value = v.name;
+  document.getElementById('vp-desc').value = v.description||'';
+  document.getElementById('vp-icon-display').textContent = vpEmoji;
+  document.getElementById('vp-toggle').className = 'toggle-track'+(vpGated?' on':'');
+  document.getElementById('vp-cond-section').style.display = vpGated?'block':'none';
+  document.getElementById('vp-err').textContent = '';
+  renderCondList(); openOv('ov-vault');
+}
+
+function openEditCurrentVault() { if (currentVaultId) openEditVault(currentVaultId); }
+
+function toggleGated() {
+  vpGated = !vpGated;
+  document.getElementById('vp-toggle').className = 'toggle-track'+(vpGated?' on':'');
+  document.getElementById('vp-cond-section').style.display = vpGated?'block':'none';
+}
+
+function addCond() {
+  const inp = document.getElementById('vp-new-cond');
+  const v = inp.value.trim(); if (!v) return;
+  vpConds.push(v); inp.value = ''; renderCondList();
+}
+document.getElementById('vp-new-cond').addEventListener('keydown', e => { if(e.key==='Enter') addCond(); });
+
+function removeCond(i) { vpConds.splice(i,1); renderCondList(); }
+function renderCondList() {
+  document.getElementById('vp-cond-list').innerHTML = vpConds.map((c,i)=>`
+    <div class="cond-edit-item">
+      <span class="cond-edit-num">${i+1}</span>
+      <span class="cond-edit-text">${esc(c)}</span>
+      <button class="cond-remove" onclick="removeCond(${i})">✕</button>
+    </div>`).join('');
+}
+
+function toggleEmojiRow() {
+  const r = document.getElementById('emoji-row');
+  r.style.display = r.style.display==='none'?'flex':'none';
+}
+function pickEmoji(e) {
+  vpEmoji = e;
+  document.getElementById('vp-icon-display').textContent = e;
+  document.querySelectorAll('.emoji-opt').forEach(el=>el.classList.toggle('selected',el.textContent===e));
+  document.getElementById('emoji-row').style.display='none';
+}
+
+async function saveVault() {
+  const name = document.getElementById('vp-name').value.trim();
+  if (!name) { document.getElementById('vp-err').textContent='name required'; return; }
+  const btn = document.getElementById('vp-save-btn');
+  btn.disabled=true; btn.textContent='saving…';
+
+  const payload = {
+    user_id: me.id,
+    name,
+    description: document.getElementById('vp-desc').value.trim()||null,
+    icon: vpEmoji,
+    is_gated: vpGated,
+    conditions: vpConds
   };
 
-  // replace delete with similar safety
-  const originalDelete = deletePin;
-  window.deletePin = deletePin;
-  deletePin = async function(pinId) {
-    if (!currentUser) return;
-    try {
-      const { error } = await supabase.from('pins').delete().eq('id', pinId).eq('user_id', currentUser.id);
-      if (error) throw error;
-      pins = pins.filter(p => p.id !== pinId);
-      renderMainApp();
-    } catch (err) {
-      alert("delete error: " + err.message);
-    }
-  };
+  const { error } = editingVaultId
+    ? await sb.from('vaults').update(payload).eq('id',editingVaultId)
+    : await sb.from('vaults').insert(payload);
 
-  // Override globals so event handlers refer to new functions
-  window.createPin = createPin;
-  window.deletePin = deletePin;
-  window.fetchPins = fetchPins;
+  btn.disabled=false;
+  btn.textContent = editingVaultId?'save changes':'create vault';
 
-  // start
-  initApp();
+  if (error) { document.getElementById('vp-err').textContent=error.message; return; }
+  toast(editingVaultId?'vault updated':'vault created','ok');
+  closeOv('ov-vault');
+  await loadVaults();
+  if (currentVaultId===editingVaultId) {
+    const updated = vaults.find(v=>v.id===currentVaultId);
+    if (updated) { renderDetailShare(updated); loadKeys(updated); document.getElementById('d-icon').textContent=updated.icon||'🔑'; document.getElementById('d-name').textContent=updated.name; document.getElementById('d-desc').textContent=updated.description||'—'; }
+  }
+}
+
+// ══════════════════════════════════════════════
+//  ADD KEY
+// ══════════════════════════════════════════════
+function openAddKey() {
+  document.getElementById('kp-name').value='';
+  document.getElementById('kp-value').value='';
+  document.getElementById('kp-err').textContent='';
+  document.getElementById('kp-save-btn').disabled=false;
+  openOv('ov-key');
+}
+
+async function saveKey() {
+  const n=document.getElementById('kp-name').value.trim();
+  const v=document.getElementById('kp-value').value.trim();
+  if (!n||!v) { document.getElementById('kp-err').textContent='fill in both fields'; return; }
+  const btn=document.getElementById('kp-save-btn'); btn.disabled=true; btn.textContent='saving…';
+  const { error } = await sb.from('vault_keys').insert({ vault_id:currentVaultId, user_id:me.id, key_name:n, key_value:v });
+  btn.disabled=false; btn.textContent='save';
+  if (error) { document.getElementById('kp-err').textContent=error.message; return; }
+  toast('key saved','ok'); closeOv('ov-key');
+  const vault=vaults.find(x=>x.id===currentVaultId);
+  if (vault) { vault._kc=(vault._kc||0)+1; updateStats(); loadKeys(vault); }
+}
+
+// ══════════════════════════════════════════════
+//  DELETE
+// ══════════════════════════════════════════════
+function promptDelVault(id,name) {
+  pendingDelete={type:'vault',id};
+  document.getElementById('del-label').textContent=`delete vault "${name}" and all its keys? cannot be undone.`;
+  openOv('ov-del');
+}
+function promptDelKey(id,name) {
+  pendingDelete={type:'key',id};
+  document.getElementById('del-label').textContent=`delete key "${name}"? cannot be undone.`;
+  openOv('ov-del');
+}
+
+async function execDelete() {
+  if (!pendingDelete) return;
+  closeOv('ov-del');
+  if (pendingDelete.type==='vault') {
+    await sb.from('vaults').delete().eq('id',pendingDelete.id);
+    if (currentVaultId===pendingDelete.id) backToDash();
+    await loadVaults(); toast('vault deleted','ok');
+  } else {
+    await sb.from('vault_keys').delete().eq('id',pendingDelete.id);
+    const vault=vaults.find(x=>x.id===currentVaultId);
+    if (vault) { vault._kc=Math.max(0,(vault._kc||1)-1); updateStats(); loadKeys(vault); }
+    toast('key deleted','ok');
+  }
+  pendingDelete=null;
+}
+
+// ══════════════════════════════════════════════
+//  GATE PAGE
+// ══════════════════════════════════════════════
+const gateChecked = new Set();
+
+async function renderGate(vid) {
+  const inner = document.getElementById('gate-inner');
+  inner.innerHTML = '<div class="empty-msg">loading</div>';
+
+  const { data: vault, error } = await sb.from('vaults')
+    .select('*').eq('id',vid).eq('is_gated',true).single();
+
+  if (error||!vault) {
+    inner.innerHTML = `
+      <div style="text-align:center;padding:40px 0">
+        <div style="font-size:28px;margin-bottom:14px;opacity:0.3">🔒</div>
+        <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.15)">vault not found</div>
+        <a href="${location.pathname}" style="display:block;margin-top:20px;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,0.12)">← lies.lat</a>
+      </div>`;
+    return;
+  }
+
+  const conds = vault.conditions||[];
+  const hasConds = conds.length>0;
+  inner.innerHTML = `
+    <div class="gate-vault-head fade-in">
+      <div class="gate-icon">${vault.icon||'🔑'}</div>
+      <div class="gate-vault-name">${esc(vault.name)}</div>
+      ${vault.description?`<div class="gate-vault-desc">${esc(vault.description)}</div>`:''}
+    </div>
+    ${hasConds ? `
+      <div class="gate-note">complete all conditions to unlock</div>
+      <div id="gate-conds">
+        ${conds.map((c,i)=>`
+          <div class="gate-cond-item fade-in" style="animation-delay:${i*60}ms" onclick="gateCheck(${i},${conds.length},'${vid}')">
+            <div class="gate-check" id="gc-${i}"></div>
+            <div class="gate-cond-text">${esc(c)}</div>
+          </div>`).join('')}
+      </div>
+      <div class="gate-sep"></div>` : `
+      <div class="gate-sep"></div>
+      <button class="btn btn-full btn-accent" onclick="revealKeys('${vid}')">unlock vault</button>
+      <div class="gate-sep"></div>`}
+    <div class="gate-reveal-box" id="gate-reveal"></div>`;
+}
+
+function gateCheck(i, total, vid) {
+  const el = document.getElementById('gc-'+i);
+  if (gateChecked.has(i)) {
+    gateChecked.delete(i); el.classList.remove('done'); el.textContent='';
+  } else {
+    gateChecked.add(i); el.classList.add('done'); el.textContent='✓';
+  }
+  if (gateChecked.size===total) revealKeys(vid);
+}
+
+async function revealKeys(vid) {
+  const { data: keys } = await sb.from('vault_keys')
+    .select('*').eq('vault_id',vid).order('created_at',{ascending:false});
+  const box = document.getElementById('gate-reveal');
+  if (!box) return;
+  box.style.display = 'block';
+  if (!keys||!keys.length) {
+    box.innerHTML = `<div class="gate-reveal-header"><span>unlocked — no keys stored</span></div>`;
+    return;
+  }
+  box.innerHTML = `
+    <div class="gate-reveal-header">
+      <span>unlocked · ${keys.length} key${keys.length!==1?'s':''}</span>
+    </div>
+    ${keys.map(k=>`
+      <div class="gate-key-row">
+        <div class="gate-key-label">${esc(k.key_name)}</div>
+        <div class="gate-key-value">${esc(k.key_value)}</div>
+        <button class="btn btn-xs" onclick="cpKey('${encodeURIComponent(k.key_value)}')">copy</button>
+      </div>`).join('')}`;
+}
+
+// ══════════════════════════════════════════════
+//  GATE LINK
+// ══════════════════════════════════════════════
+function copyGateLink(vid) {
+  navigator.clipboard.writeText(`${location.origin}${location.pathname}#vault/${vid}`);
+  toast('link copied','ok');
+}
+
+// ══════════════════════════════════════════════
+//  OVERLAY HELPERS
+// ══════════════════════════════════════════════
+function openOv(id)  { document.getElementById(id).classList.add('open'); }
+function closeOv(id) { document.getElementById(id).classList.remove('open'); }
+function ovClose(id, e) { if (e.target===document.getElementById(id)) closeOv(id); }
+
+// ══════════════════════════════════════════════
+//  SETUP SQL
+// ══════════════════════════════════════════════
+function copySetupSQL() { navigator.clipboard.writeText(SQL); toast('sql copied','ok'); }
+
+// ══════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════
+let _tt;
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'show '+(type||'');
+  clearTimeout(_tt); _tt = setTimeout(()=>el.className='',2200);
+}
+
+// ══════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 </script>
 </body>
 </html>
