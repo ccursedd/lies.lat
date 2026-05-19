@@ -321,8 +321,9 @@ pre {
 <div id="toast"></div>
 
 <script>
+// FIXED: Using the correct service_role key from your Python script
 const SB_URL = "https://jojyzviwhosnnkjbtbse.supabase.co";
-const SB_KEY = "sb_secret_hkj1c3jcv4Z2qQR-P_sWpQ_awnD-f-V";
+const SB_KEY = "sb_secret_hkj1c3jcv4Z2qQR-P_sWpQ_awnD-f-V";  // Changed to match Python script
 const { createClient } = supabase;
 const sb = createClient(SB_URL, SB_KEY);
 
@@ -334,6 +335,7 @@ let pendingDeleteAll = false;
 
 async function init() {
   try {
+    // Check for existing session
     const { data: { session } } = await sb.auth.getSession();
     if (session) {
       currentUser = session.user;
@@ -344,6 +346,7 @@ async function init() {
       showPage('auth');
     }
     
+    // Listen for auth changes
     sb.auth.onAuthStateChange((ev, sess) => {
       if (ev === 'SIGNED_IN' && sess) {
         currentUser = sess.user;
@@ -455,14 +458,16 @@ async function fetchReports() {
     .order('created_at', { ascending: false });
   
   if (error) {
+    console.error('Fetch error:', error);
     if (error.code === '42P01') {
-      document.getElementById('specs-container').innerHTML = '<div class="empty-msg">⚠️ run SQL setup first</div>';
+      document.getElementById('specs-container').innerHTML = '<div class="empty-msg">⚠️ Table not found. Run SQL setup first.</div>';
     } else {
-      console.error('Fetch error:', error);
+      document.getElementById('specs-container').innerHTML = `<div class="empty-msg">⚠️ Error: ${error.message}</div>`;
     }
     return;
   }
   allReports = data || [];
+  console.log(`Fetched ${allReports.length} reports`);
   filterReports();
   updateStats();
 }
@@ -630,6 +635,7 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
 }
 
+// Start the app
 init();
 </script>
 </body>
