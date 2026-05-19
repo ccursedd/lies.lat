@@ -2,7 +2,9 @@
   "rewrites": [
     {
       "source": "/userlist",
-      "destination": "/userlist.html",
+      "destination": "/userlist.html"
+    },
+    {
       "source": "/admin",
       "destination": "/admin.html"
     }
