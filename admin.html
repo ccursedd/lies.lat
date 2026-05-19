@@ -276,7 +276,7 @@ pre {
       <div class="stat-card"><div class="stat-label">today</div><div class="stat-number" id="stat-today">0</div></div>
       <div class="stat-card"><div class="stat-label">unique PCs</div><div class="stat-number" id="stat-unique">0</div></div>
       <div class="stat-card"><div class="stat-label">avg RAM</div><div class="stat-number" id="stat-ram">—</div></div>
-      <div class="stat-card"><div class="stat-label">software avg</div><div class="stat-number" id="stat-software">—</div></div>
+      <div class="stat-card"><div class="stat-label">last report</div><div class="stat-number" id="stat-last">—</div></div>
     </div>
 
     <div class="filters">
@@ -322,7 +322,7 @@ pre {
 
 <script>
 const SB_URL = "https://jojyzviwhosnnkjbtbse.supabase.co";
-const SB_KEY = "sb_publishable_14hdnZTp2eAhvbxjz0aKdA_rrcCNwWx";
+const SB_KEY = "sb_publishable_14hdnZTp2eAhvbxjz0aKdA_rrcCNWwX";
 const { createClient } = supabase;
 const sb = createClient(SB_URL, SB_KEY);
 
@@ -333,32 +333,38 @@ let pendingDeleteId = null;
 let pendingDeleteAll = false;
 
 async function init() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    currentUser = session.user;
-    showApp();
-    await fetchReports();
-    subscribeToReports();
-  } else {
-    showPage('auth');
-  }
-  
-  sb.auth.onAuthStateChange((ev, sess) => {
-    if (ev === 'SIGNED_IN' && sess) {
-      currentUser = sess.user;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      currentUser = session.user;
       showApp();
-      fetchReports();
+      await fetchReports();
       subscribeToReports();
-    }
-    if (ev === 'SIGNED_OUT') {
-      currentUser = null;
+    } else {
       showPage('auth');
     }
-  });
+    
+    sb.auth.onAuthStateChange((ev, sess) => {
+      if (ev === 'SIGNED_IN' && sess) {
+        currentUser = sess.user;
+        showApp();
+        fetchReports();
+        subscribeToReports();
+      }
+      if (ev === 'SIGNED_OUT') {
+        currentUser = null;
+        showPage('auth');
+      }
+    });
+  } catch (err) {
+    console.error('Init error:', err);
+    document.getElementById('page-loading').style.display = 'none';
+    document.getElementById('page-auth').style.display = 'flex';
+  }
 }
 
 function subscribeToReports() {
-  sb.channel('reports')
+  const channel = sb.channel('reports')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pc_reports' }, 
       (payload) => {
         allReports.unshift(payload.new);
@@ -402,21 +408,45 @@ async function authSubmit() {
   if (!email || !pass) { errEl.textContent = 'fill all fields'; return; }
 
   const btn = document.getElementById('auth-submit-btn');
-  btn.disabled = true; btn.textContent = '...';
+  btn.disabled = true; 
+  btn.textContent = '...';
   let error;
+  
   if (authMode === 'login') {
-    ({ error } = await sb.auth.signInWithPassword({ email, password: pass }));
+    const result = await sb.auth.signInWithPassword({ email, password: pass });
+    error = result.error;
   } else {
-    if (pass.length < 6) { errEl.textContent = 'password min 6 chars'; btn.disabled=false; btn.textContent='create'; return; }
-    ({ error } = await sb.auth.signUp({ email, password: pass, options: { data: { display_name: name || email.split('@')[0] } } }));
+    if (pass.length < 6) { 
+      errEl.textContent = 'password min 6 chars'; 
+      btn.disabled=false; 
+      btn.textContent='create'; 
+      return; 
+    }
+    const result = await sb.auth.signUp({ 
+      email, 
+      password: pass, 
+      options: { data: { display_name: name || email.split('@')[0] } } 
+    });
+    error = result.error;
+    if (!error && result.data.user) {
+      errEl.textContent = 'Account created! Please sign in.';
+      authMode = 'login';
+      authSwitch();
+      btn.disabled = false;
+      btn.textContent = 'enter';
+      return;
+    }
   }
+  
   btn.disabled = false;
   btn.textContent = authMode === 'login' ? 'enter' : 'create';
   if (error) errEl.textContent = error.message;
   else if (authMode === 'signup') toast('account created! sign in');
 }
 
-async function doSignOut() { await sb.auth.signOut(); }
+async function doSignOut() { 
+  await sb.auth.signOut(); 
+}
 
 async function fetchReports() {
   if (!currentUser) return;
@@ -427,6 +457,8 @@ async function fetchReports() {
   if (error) {
     if (error.code === '42P01') {
       document.getElementById('specs-container').innerHTML = '<div class="empty-msg">⚠️ run SQL setup first</div>';
+    } else {
+      console.error('Fetch error:', error);
     }
     return;
   }
@@ -443,7 +475,7 @@ function filterReports() {
   filteredReports = allReports.filter(r => {
     if (nameFilter && !(r.pc_name || '').toLowerCase().includes(nameFilter)) return false;
     if (userFilter && !(r.username || '').toLowerCase().includes(userFilter)) return false;
-    if (ipFilter && !(r.public_ip || r.local_ip || '').toLowerCase().includes(ipFilter)) return false;
+    if (ipFilter && (!(r.public_ip || r.local_ip || '').toLowerCase().includes(ipFilter))) return false;
     return true;
   });
   
@@ -463,18 +495,24 @@ function updateStats() {
   const today = new Date().toISOString().slice(0,10);
   const todayCount = allReports.filter(r => r.created_at?.startsWith(today)).length;
   document.getElementById('stat-today').textContent = todayCount;
-  const unique = new Set(allReports.map(r => r.unique_id || r.pc_name)).size;
+  const unique = new Set(allReports.map(r => r.visitor_id || r.pc_name)).size;
   document.getElementById('stat-unique').textContent = unique;
   
   let totalRam = 0, ramCount = 0;
-  let totalSoftware = 0, softwareCount = 0;
   allReports.forEach(r => {
     let val = parseFloat(r.memory_gb);
     if (!isNaN(val)) { totalRam += val; ramCount++; }
-    if (r.installed_software_count) { totalSoftware += r.installed_software_count; softwareCount++; }
   });
   document.getElementById('stat-ram').textContent = ramCount > 0 ? Math.round(totalRam/ramCount) + ' GB' : '—';
-  document.getElementById('stat-software').textContent = softwareCount > 0 ? Math.round(totalSoftware/softwareCount) : '—';
+  
+  if (allReports.length > 0 && allReports[0].created_at) {
+    const lastDate = new Date(allReports[0].created_at);
+    const now = new Date();
+    const diffHours = Math.floor((now - lastDate) / (1000 * 60 * 60));
+    document.getElementById('stat-last').textContent = diffHours < 1 ? 'just now' : `${diffHours}h ago`;
+  } else {
+    document.getElementById('stat-last').textContent = '—';
+  }
 }
 
 function renderSpecs() {
@@ -499,10 +537,9 @@ function renderSpecs() {
         <div class="spec-time">${escapeHtml(rep.created_at?.slice(5,16) || '?')}</div>
       </div>
       <div class="spec-body">
-        <div><strong>${escapeHtml(rep.platform || '?')}</strong> &nbsp;|&nbsp; 🧠 ${cpuInfo.logical_cores || rep.cpu_cores || '?'} cores &nbsp;|&nbsp; 💾 ${ramInfo.total_gb || rep.memory_gb || '?'}</div>
-        <div>👤 ${escapeHtml(rep.username || '?')} &nbsp;|&nbsp; 📦 ${rep.installed_software_count || 0} apps &nbsp;|&nbsp; 🔄 ${rep.running_processes_count || 0} procs</div>
+        <div><strong>${escapeHtml(rep.platform || '?')}</strong> &nbsp;|&nbsp; 🧠 ${cpuInfo.cores || rep.cpu_cores || '?'} cores &nbsp;|&nbsp; 💾 ${ramInfo.total_gb || rep.memory_gb || '?'}</div>
+        <div>👤 ${escapeHtml(rep.username || '?')}</div>
         <div class="spec-ip">🌐 ${escapeHtml(rep.public_ip || 'private')} &nbsp;|&nbsp; 🏠 ${escapeHtml(rep.local_ip || '?')}</div>
-        <div class="spec-ip">🆔 ${escapeHtml(rep.visitor_id?.slice(0,12) || '?')}...</div>
       </div>
       <div class="card-actions">
         <button class="btn btn-sm" onclick="showDetail('${rep.id}')">details</button>
@@ -514,7 +551,7 @@ function renderSpecs() {
 }
 
 async function showDetail(id) {
-  const report = allReports.find(r => r.id === id);
+  const report = allReports.find(r => r.id == id);
   if (!report) return;
   const raw = report.raw_specs || {};
   const modal = document.getElementById('modal-detail');
@@ -524,23 +561,15 @@ async function showDetail(id) {
     <strong>🖥️ PC NAME</strong> ${escapeHtml(report.pc_name)}<br>
     <strong>👤 USERNAME</strong> ${escapeHtml(report.username)}<br>
     <strong>🆔 UNIQUE ID</strong> ${escapeHtml(report.visitor_id)}<br>
-    <strong>🔢 MAC ADDRESSES</strong> ${(raw.mac_addresses || []).map(m => `${m.interface}: ${m.mac}`).join('<br>') || '—'}<br>
     <strong>🌍 PUBLIC IP</strong> ${escapeHtml(report.public_ip || '—')}<br>
     <strong>🏠 LOCAL IP</strong> ${escapeHtml(report.local_ip || '—')}<br>
     <strong>💿 OS</strong> ${escapeHtml(raw.os?.system)} ${escapeHtml(raw.os?.release)}<br>
-    <strong>⏰ BOOT TIME</strong> ${raw.os?.boot_time ? new Date(raw.os.boot_time).toLocaleString() : '—'}<br>
-    <strong>🧠 CPU</strong> ${raw.cpu?.logical_cores} logical cores · ${raw.cpu?.physical_cores} physical<br>
-    <strong>⚡ CPU USAGE</strong> ${raw.cpu?.usage_percent}%<br>
-    <strong>💾 RAM</strong> ${raw.ram?.total_gb} GB total · ${raw.ram?.used_gb} GB used (${raw.ram?.usage_percent}%)<br>
-    <strong>💾 SWAP</strong> ${raw.ram?.swap_total_gb} GB (${raw.ram?.swap_percent}% used)<br>
-    <strong>💽 DRIVES</strong> ${(raw.disks || []).map(d => `${d.drive}: ${d.total_gb}GB (${d.usage_percent}%)`).join(' · ')}<br>
+    <strong>🧠 CPU</strong> ${raw.cpu?.cores || '?'} logical cores · ${raw.cpu?.physical_cores || '?'} physical<br>
+    <strong>⚡ CPU USAGE</strong> ${raw.cpu?.usage_percent || '?'}%<br>
+    <strong>💾 RAM</strong> ${raw.ram?.total_gb || '?'} GB total · ${raw.ram?.used_gb || '?'} GB used (${raw.ram?.usage_percent || '?'}%)<br>
+    <strong>💽 DRIVES</strong> ${(raw.disks || []).map(d => `${d.drive}: ${d.total_gb}GB`).join(' · ') || '—'}<br>
     <strong>🎮 GPU</strong> ${(raw.gpu || []).map(g => g.name).join(', ') || '—'}<br>
-    <strong>🌡️ TEMPERATURES</strong> ${(raw.temperatures || []).map(t => `${t.sensor}: ${t.current_c}°C`).join(' · ') || '—'}<br>
-    <strong>🔋 BATTERY</strong> ${raw.battery ? `${raw.battery.percent}% (${raw.battery.status})` : '—'}<br>
-    <strong>📡 SAVED WiFi</strong> ${(raw.wifi_networks || []).slice(0,10).join(', ') || '—'}<br>
-    <strong>🚀 STARTUP PROGRAMS</strong> ${(raw.startup_programs || []).slice(0,10).join(', ') || '—'}<br>
-    <strong>📦 INSTALLED SOFTWARE (top)</strong><br>${(raw.installed_software || []).slice(0,20).map(s => `&nbsp;&nbsp;• ${s.name} (${s.version})`).join('<br>') || '—'}<br>
-    <strong>🔄 RUNNING PROCESSES (top memory)</strong><br>${(raw.running_processes || []).map(p => `&nbsp;&nbsp;• ${p.name} (${p.memory_mb} MB)`).join('<br>') || '—'}<br>
+    <strong>🔋 BATTERY</strong> ${raw.battery ? `${raw.battery.percent}% (${raw.battery.plugged ? 'Charging' : 'On battery'})` : '—'}<br>
     <strong>📅 REPORTED</strong> ${new Date(report.created_at).toLocaleString()}<br>
     <details><summary>📦 full JSON</summary><pre>${escapeHtml(JSON.stringify(raw, null, 2))}</pre></details>
   `;
@@ -567,15 +596,17 @@ async function confirmDelete() {
       toast('Report deleted');
       await fetchReports();
     } else {
-      toast('Delete failed');
+      toast('Delete failed: ' + error.message);
     }
     pendingDeleteId = null;
   } else if (pendingDeleteAll) {
     const ids = filteredReports.map(r => r.id);
+    let success = 0;
     for (const id of ids) {
-      await sb.from('pc_reports').delete().eq('id', id);
+      const { error } = await sb.from('pc_reports').delete().eq('id', id);
+      if (!error) success++;
     }
-    toast(`Deleted ${ids.length} reports`);
+    toast(`Deleted ${success}/${ids.length} reports`);
     await fetchReports();
     pendingDeleteAll = false;
   }
