@@ -13,97 +13,72 @@
         }
         
         body {
-            background: #0a0a0a;
-            color: #e0e0e0;
-            font-family: 'Courier New', 'Fira Code', monospace;
+            background: #000;
+            color: #ccc;
+            font-family: 'Courier New', monospace;
         }
         
-        /* Login Styles */
-        .login-container {
+        /* Auth Container */
+        .auth-container {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #0a0a0a 0%, #000000 100%);
+            background: #000;
         }
         
-        .login-box {
-            background: #111111;
-            border: 1px solid #2a2a2a;
-            border-radius: 4px;
+        .auth-box {
+            background: #0a0a0a;
+            border: 1px solid #222;
             padding: 40px;
-            width: 340px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            width: 320px;
         }
         
-        .login-box h1 {
-            font-size: 24px;
-            margin-bottom: 5px;
-            color: #ffffff;
-            letter-spacing: 2px;
+        .auth-box h1 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #fff;
         }
         
-        .login-box h1 span {
-            color: #4a4a4a;
+        .auth-box h1 span {
+            color: #666;
         }
         
-        .login-subtitle {
-            font-size: 10px;
-            color: #4a4a4a;
-            margin-bottom: 30px;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-        }
-        
-        .login-box input {
+        .auth-box input {
             width: 100%;
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            border-radius: 3px;
-            color: #ffffff;
-            padding: 12px;
+            background: #000;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px;
             margin: 10px 0;
             font-family: monospace;
-            font-size: 12px;
         }
         
-        .login-box input:focus {
-            outline: none;
-            border-color: #4a4a4a;
-        }
-        
-        .login-box button {
+        .auth-box button {
             width: 100%;
             background: #1a1a1a;
-            border: 1px solid #3a3a3a;
-            border-radius: 3px;
-            color: #ffffff;
-            padding: 12px;
-            margin-top: 20px;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 10px;
+            margin-top: 10px;
             cursor: pointer;
             font-family: monospace;
-            font-size: 11px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            transition: all 0.3s;
         }
         
-        .login-box button:hover {
-            background: #2a2a2a;
-            border-color: #5a5a5a;
+        .auth-box button:hover {
+            background: #222;
         }
         
         .switch-btn {
             text-align: center;
             margin-top: 15px;
-            color: #4a4a4a;
+            color: #666;
             cursor: pointer;
-            font-size: 11px;
-            transition: color 0.3s;
+            font-size: 12px;
         }
         
         .switch-btn:hover {
-            color: #8a8a8a;
+            color: #999;
         }
         
         .error {
@@ -113,45 +88,36 @@
             text-align: center;
         }
         
-        /* Admin Panel Styles */
+        /* Admin Container */
         .admin-container {
             display: none;
         }
         
         .header {
-            background: #000000;
-            border-bottom: 1px solid #1a1a1a;
+            background: #0a0a0a;
+            border-bottom: 1px solid #222;
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
         }
         
         .logo {
             font-size: 18px;
-            font-weight: bold;
-            color: #ffffff;
-            letter-spacing: 2px;
+            color: #fff;
         }
         
         .logo span {
-            color: #4a4a4a;
+            color: #666;
         }
         
         .logout-btn {
             background: none;
-            border: 1px solid #2a2a2a;
-            border-radius: 3px;
-            color: #8a8a8a;
-            padding: 6px 15px;
+            border: 1px solid #333;
+            color: #888;
+            padding: 5px 15px;
             cursor: pointer;
             font-family: monospace;
-            font-size: 10px;
-            letter-spacing: 1px;
-            transition: all 0.3s;
         }
         
         .logout-btn:hover {
@@ -165,360 +131,203 @@
             padding: 30px;
         }
         
-        /* Stats Cards */
-        .stats-grid {
+        .stats {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 1px;
-            background: #1a1a1a;
+            background: #222;
             margin-bottom: 30px;
         }
         
-        .stat-card {
+        .stat {
             background: #0a0a0a;
-            padding: 25px 20px;
+            padding: 20px;
             text-align: center;
         }
         
         .stat-number {
-            font-size: 36px;
-            font-weight: bold;
-            color: #ffffff;
+            font-size: 32px;
+            color: #fff;
         }
         
         .stat-label {
-            font-size: 9px;
-            color: #4a4a4a;
-            margin-top: 8px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
+            font-size: 10px;
+            color: #666;
+            margin-top: 5px;
         }
         
-        /* Filters */
-        .filters-bar {
+        .filters {
             display: flex;
-            gap: 12px;
-            margin-bottom: 25px;
+            gap: 10px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
-            align-items: center;
         }
         
         .filter-input {
             background: #0a0a0a;
-            border: 1px solid #2a2a2a;
-            border-radius: 3px;
-            color: #ffffff;
+            border: 1px solid #333;
+            color: #fff;
             padding: 8px 12px;
             font-family: monospace;
-            font-size: 11px;
-            min-width: 180px;
-        }
-        
-        .filter-input::placeholder {
-            color: #3a3a3a;
         }
         
         .refresh-btn {
             background: #1a1a1a;
-            border: 1px solid #3a3a3a;
-            border-radius: 3px;
-            color: #ffffff;
+            border: 1px solid #444;
+            color: #fff;
             padding: 8px 20px;
             cursor: pointer;
             font-family: monospace;
-            font-size: 10px;
-            letter-spacing: 1px;
-            transition: all 0.3s;
         }
         
         .refresh-btn:hover {
-            background: #2a2a2a;
+            background: #222;
         }
         
-        .delete-all-btn {
-            background: #1a0a0a;
-            border-color: #442222;
-            color: #aa4444;
-        }
-        
-        .delete-all-btn:hover {
-            background: #2a0a0a;
-            border-color: #ff4444;
-            color: #ff4444;
-        }
-        
-        /* Reports Grid */
         .reports-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 15px;
         }
         
         .report-card {
             background: #0a0a0a;
-            border: 1px solid #1a1a1a;
-            border-radius: 4px;
-            transition: all 0.3s;
-        }
-        
-        .report-card:hover {
-            border-color: #2a2a2a;
-            transform: translateY(-2px);
+            border: 1px solid #222;
+            padding: 15px;
         }
         
         .report-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 15px 18px;
-            border-bottom: 1px solid #1a1a1a;
-            background: #0d0d0d;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #222;
         }
         
         .report-pc {
             font-weight: bold;
-            color: #ffffff;
-            font-size: 13px;
+            color: #fff;
         }
         
         .report-time {
-            font-size: 9px;
-            color: #4a4a4a;
+            font-size: 10px;
+            color: #666;
         }
         
-        .report-body {
-            padding: 15px 18px;
-        }
-        
-        .report-row {
-            margin: 10px 0;
+        .report-detail {
             font-size: 11px;
+            margin: 8px 0;
         }
         
-        .label {
-            color: #4a4a4a;
+        .detail-label {
+            color: #666;
             display: inline-block;
-            width: 75px;
-            letter-spacing: 0.5px;
+            width: 70px;
         }
         
-        .value {
-            color: #c0c0c0;
+        .detail-value {
+            color: #ccc;
         }
         
         .public-ip {
             color: #44aa44;
         }
         
-        .local-ip {
-            color: #aa8844;
-        }
-        
-        .report-footer {
-            padding: 12px 18px;
-            border-top: 1px solid #1a1a1a;
-            display: flex;
-            justify-content: flex-end;
-        }
-        
         .delete-btn {
             background: none;
-            border: 1px solid #331111;
-            border-radius: 3px;
-            color: #884444;
-            padding: 5px 12px;
+            border: 1px solid #442222;
+            color: #aa4444;
+            padding: 5px 10px;
             cursor: pointer;
             font-family: monospace;
-            font-size: 9px;
-            transition: all 0.3s;
+            font-size: 10px;
+            margin-top: 10px;
         }
         
         .delete-btn:hover {
-            background: #1a0a0a;
+            background: #220000;
             border-color: #ff4444;
             color: #ff4444;
         }
         
-        .empty-state {
+        .empty {
             text-align: center;
-            padding: 80px 20px;
-            color: #3a3a3a;
-        }
-        
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            opacity: 0.5;
+            padding: 60px;
+            color: #666;
         }
         
         .loading {
             text-align: center;
-            padding: 80px;
-            color: #4a4a4a;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
-        }
-        
-        .loading-dot {
-            animation: pulse 1s infinite;
-        }
-        
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.9);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal-content {
-            background: #0a0a0a;
-            border: 1px solid #2a2a2a;
-            border-radius: 4px;
-            max-width: 500px;
-            width: 90%;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .modal-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 25px;
-        }
-        
-        .modal-btn {
-            padding: 8px 25px;
-            border: 1px solid #3a3a3a;
-            background: #1a1a1a;
-            color: #fff;
-            cursor: pointer;
-            font-family: monospace;
-        }
-        
-        .modal-btn-danger {
-            border-color: #661111;
-            color: #ff6666;
-        }
-        
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .reports-grid {
-                grid-template-columns: 1fr;
-            }
-            .filters-bar {
-                flex-direction: column;
-            }
-            .filter-input {
-                width: 100%;
-            }
+            padding: 60px;
+            color: #666;
         }
     </style>
 </head>
 <body>
 
 <!-- Login View -->
-<div id="loginView">
-    <div class="login-container">
-        <div class="login-box">
+<div id="auth-view">
+    <div class="auth-container">
+        <div class="auth-box">
             <h1>lies<span>.lat</span></h1>
-            <div class="login-subtitle">ADMIN CONSOLE</div>
-            <input type="email" id="loginEmail" placeholder="EMAIL" autocomplete="email">
-            <input type="password" id="loginPassword" placeholder="PASSWORD" autocomplete="current-password">
-            <div id="loginError" class="error"></div>
-            <button id="loginBtn">LOGIN</button>
-            <div id="switchAuth" class="switch-btn">CREATE ACCOUNT</div>
+            <div style="font-size: 10px; color: #666; margin-bottom: 20px;">ADMIN ACCESS</div>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <div id="auth-error" class="error"></div>
+            <button id="auth-btn">LOGIN</button>
+            <div id="switch-auth" class="switch-btn">CREATE ACCOUNT</div>
         </div>
     </div>
 </div>
 
 <!-- Admin View -->
-<div id="adminView" class="admin-container">
+<div id="admin-view" class="admin-container">
     <div class="header">
-        <div class="logo">lies<span>.lat</span> <span style="font-size: 9px;">ADMIN</span></div>
-        <button id="logoutBtn" class="logout-btn">LOGOUT</button>
+        <div class="logo">lies<span>.lat</span> <span style="font-size: 10px;">ADMIN</span></div>
+        <button id="logout-btn" class="logout-btn">LOGOUT</button>
     </div>
     
     <div class="main">
-        <!-- Stats -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number" id="statTotal">0</div>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number" id="total-reports">0</div>
                 <div class="stat-label">TOTAL REPORTS</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="statToday">0</div>
+            <div class="stat">
+                <div class="stat-number" id="today-reports">0</div>
                 <div class="stat-label">TODAY</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="statUnique">0</div>
+            <div class="stat">
+                <div class="stat-number" id="unique-pcs">0</div>
                 <div class="stat-label">UNIQUE PCS</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="statAvgRam">0</div>
+            <div class="stat">
+                <div class="stat-number" id="avg-ram">0</div>
                 <div class="stat-label">AVG RAM (GB)</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="statAvgCpu">0</div>
-                <div class="stat-label">AVG CPU CORES</div>
-            </div>
         </div>
         
-        <!-- Filters -->
-        <div class="filters-bar">
-            <input type="text" id="filterName" class="filter-input" placeholder="🔍 Filter by PC name">
-            <input type="text" id="filterUser" class="filter-input" placeholder="👤 Filter by username">
-            <input type="text" id="filterIp" class="filter-input" placeholder="🌐 Filter by IP address">
-            <button id="refreshBtn" class="refresh-btn">⟳ REFRESH</button>
-            <button id="deleteAllBtn" class="refresh-btn delete-all-btn" style="display: none;">🗑 DELETE ALL FILTERED</button>
+        <div class="filters">
+            <input type="text" id="filter-name" class="filter-input" placeholder="Filter by PC name">
+            <input type="text" id="filter-ip" class="filter-input" placeholder="Filter by IP">
+            <button id="refresh-btn" class="refresh-btn">REFRESH</button>
         </div>
         
-        <!-- Reports -->
-        <div id="reportsContainer">
-            <div class="loading">
-                <div class="loading-dot">⟳ LOADING REPORTS...</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Confirmation Modal -->
-<div id="deleteModal" class="modal">
-    <div class="modal-content">
-        <h3 style="margin-bottom: 15px;">⚠️ CONFIRM DELETE</h3>
-        <p id="deleteMessage">Are you sure you want to delete this report?</p>
-        <div class="modal-buttons">
-            <button id="cancelDeleteBtn" class="modal-btn">CANCEL</button>
-            <button id="confirmDeleteBtn" class="modal-btn modal-btn-danger">DELETE</button>
+        <div id="reports-list">
+            <div class="loading">Loading reports...</div>
         </div>
     </div>
 </div>
 
 <script>
-    // Supabase Configuration
     const SUPABASE_URL = "https://jojyzviwhosnnkjbtbse.supabase.co";
     const SUPABASE_KEY = "sb_publishable_14hdnZTp2eAhvbxjz0aKdA_rrcCNWwX";
     const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_KEY);
     
-    // State
     let currentUser = null;
     let allReports = [];
-    let pendingDeleteId = null;
-    let isLoginMode = true;
     
-    // Initialize
+    // Check session on load
     checkSession();
     
     async function checkSession() {
@@ -530,36 +339,29 @@
             await loadReports();
             subscribeToRealtime();
         } else {
-            showLogin();
+            showAuth();
         }
     }
     
-    function showLogin() {
-        document.getElementById('loginView').style.display = 'block';
-        document.getElementById('adminView').style.display = 'none';
+    function showAuth() {
+        document.getElementById('auth-view').style.display = 'block';
+        document.getElementById('admin-view').style.display = 'none';
     }
     
     function showAdmin() {
-        document.getElementById('loginView').style.display = 'none';
-        document.getElementById('adminView').style.display = 'block';
+        document.getElementById('auth-view').style.display = 'none';
+        document.getElementById('admin-view').style.display = 'block';
     }
     
     function subscribeToRealtime() {
-        const channel = supabase
-            .channel('pc_reports_channel')
+        supabase
+            .channel('pc_reports')
             .on('postgres_changes', { 
                 event: 'INSERT', 
                 schema: 'public', 
                 table: 'pc_reports' 
             }, (payload) => {
                 console.log('New report received!', payload);
-                loadReports();
-            })
-            .on('postgres_changes', { 
-                event: 'DELETE', 
-                schema: 'public', 
-                table: 'pc_reports' 
-            }, () => {
                 loadReports();
             })
             .subscribe();
@@ -572,9 +374,8 @@
             .order('created_at', { ascending: false });
         
         if (error) {
-            console.error('Error loading reports:', error);
-            document.getElementById('reportsContainer').innerHTML = 
-                `<div class="empty-state"><div class="empty-state-icon">⚠️</div>Error: ${error.message}<br>Make sure the table exists in Supabase</div>`;
+            console.error('Error:', error);
+            document.getElementById('reports-list').innerHTML = `<div class="empty">Error: ${error.message}</div>`;
             return;
         }
         
@@ -583,18 +384,13 @@
     }
     
     function applyFilters() {
-        const nameFilter = document.getElementById('filterName').value.toLowerCase();
-        const userFilter = document.getElementById('filterUser').value.toLowerCase();
-        const ipFilter = document.getElementById('filterIp').value.toLowerCase();
+        const nameFilter = document.getElementById('filter-name').value.toLowerCase();
+        const ipFilter = document.getElementById('filter-ip').value.toLowerCase();
         
         let filtered = allReports;
         
         if (nameFilter) {
             filtered = filtered.filter(r => (r.pc_name || '').toLowerCase().includes(nameFilter));
-        }
-        
-        if (userFilter) {
-            filtered = filtered.filter(r => (r.username || '').toLowerCase().includes(userFilter));
         }
         
         if (ipFilter) {
@@ -606,174 +402,93 @@
         
         renderReports(filtered);
         updateStats();
-        
-        // Show delete all button if filters are active and there are results
-        const deleteAllBtn = document.getElementById('deleteAllBtn');
-        if ((nameFilter || userFilter || ipFilter) && filtered.length > 0) {
-            deleteAllBtn.style.display = 'block';
-            deleteAllBtn.textContent = `🗑 DELETE ${filtered.length} FILTERED`;
-        } else {
-            deleteAllBtn.style.display = 'none';
-        }
     }
     
     function updateStats() {
         const total = allReports.length;
-        document.getElementById('statTotal').textContent = total;
+        document.getElementById('total-reports').textContent = total;
         
         const today = new Date().toISOString().split('T')[0];
         const todayCount = allReports.filter(r => (r.created_at || '').startsWith(today)).length;
-        document.getElementById('statToday').textContent = todayCount;
+        document.getElementById('today-reports').textContent = todayCount;
         
         const uniquePCs = new Set(allReports.map(r => r.pc_name)).size;
-        document.getElementById('statUnique').textContent = uniquePCs;
+        document.getElementById('unique-pcs').textContent = uniquePCs;
         
         let totalRam = 0;
         let ramCount = 0;
-        let totalCpu = 0;
-        let cpuCount = 0;
-        
         allReports.forEach(r => {
-            const ramMatch = (r.memory_gb || '').match(/(\d+\.?\d*)/);
-            if (ramMatch) {
-                totalRam += parseFloat(ramMatch[1]);
+            const match = (r.memory_gb || '').match(/(\d+\.?\d*)/);
+            if (match) {
+                totalRam += parseFloat(match[1]);
                 ramCount++;
             }
-            if (r.cpu_cores) {
-                totalCpu += r.cpu_cores;
-                cpuCount++;
-            }
         });
-        
         const avgRam = ramCount > 0 ? (totalRam / ramCount).toFixed(1) : '0';
-        const avgCpu = cpuCount > 0 ? Math.round(totalCpu / cpuCount) : '0';
-        
-        document.getElementById('statAvgRam').textContent = avgRam;
-        document.getElementById('statAvgCpu').textContent = avgCpu;
+        document.getElementById('avg-ram').textContent = avgRam;
     }
     
     function renderReports(reports) {
-        const container = document.getElementById('reportsContainer');
+        const container = document.getElementById('reports-list');
         
         if (!reports || reports.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">📡</div>
-                    <div>NO REPORTS FOUND</div>
-                    <div style="font-size: 10px; margin-top: 10px;">Run the Python script to send PC info</div>
-                </div>`;
+            container.innerHTML = '<div class="empty">No reports found</div>';
             return;
         }
         
-        container.innerHTML = '<div class="reports-grid"></div>';
-        const grid = container.querySelector('.reports-grid');
-        
-        reports.forEach(report => {
+        container.innerHTML = reports.map(report => {
             const date = new Date(report.created_at);
-            const timeStr = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-            const rawSpecs = report.raw_specs || {};
+            const timeStr = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2,'0')}`;
             
-            const card = document.createElement('div');
-            card.className = 'report-card';
-            card.innerHTML = `
-                <div class="report-header">
-                    <span class="report-pc">🖥️ ${escapeHtml(report.pc_name || 'Unknown')}</span>
-                    <span class="report-time">${escapeHtml(timeStr)}</span>
-                </div>
-                <div class="report-body">
-                    <div class="report-row">
-                        <span class="label">👤 User:</span>
-                        <span class="value">${escapeHtml(report.username || 'Unknown')}</span>
+            return `
+                <div class="report-card">
+                    <div class="report-header">
+                        <span class="report-pc">🖥️ ${escapeHtml(report.pc_name || 'Unknown')}</span>
+                        <span class="report-time">${timeStr}</span>
                     </div>
-                    <div class="report-row">
-                        <span class="label">💿 OS:</span>
-                        <span class="value">${escapeHtml(report.platform || 'Unknown')}</span>
+                    <div class="report-detail">
+                        <span class="detail-label">User:</span>
+                        <span class="detail-value">${escapeHtml(report.username || 'Unknown')}</span>
                     </div>
-                    <div class="report-row">
-                        <span class="label">🧠 CPU:</span>
-                        <span class="value">${report.cpu_cores || '?'} cores</span>
+                    <div class="report-detail">
+                        <span class="detail-label">OS:</span>
+                        <span class="detail-value">${escapeHtml(report.platform || 'Unknown')}</span>
                     </div>
-                    <div class="report-row">
-                        <span class="label">💾 RAM:</span>
-                        <span class="value">${escapeHtml(report.memory_gb || 'Unknown')}</span>
+                    <div class="report-detail">
+                        <span class="detail-label">CPU:</span>
+                        <span class="detail-value">${report.cpu_cores || '?'} cores</span>
                     </div>
-                    <div class="report-row">
-                        <span class="label">🏠 Local IP:</span>
-                        <span class="value local-ip">${escapeHtml(report.local_ip || 'Unknown')}</span>
+                    <div class="report-detail">
+                        <span class="detail-label">RAM:</span>
+                        <span class="detail-value">${escapeHtml(report.memory_gb || 'Unknown')}</span>
                     </div>
-                    <div class="report-row">
-                        <span class="label">🌍 Public IP:</span>
-                        <span class="value public-ip">${escapeHtml(report.public_ip || 'Unknown')}</span>
+                    <div class="report-detail">
+                        <span class="detail-label">Local IP:</span>
+                        <span class="detail-value">${escapeHtml(report.local_ip || 'Unknown')}</span>
                     </div>
-                    <div class="report-row">
-                        <span class="label">🔢 MAC:</span>
-                        <span class="value">${escapeHtml(rawSpecs.mac || 'Unknown')}</span>
+                    <div class="report-detail">
+                        <span class="detail-label">Public IP:</span>
+                        <span class="detail-value public-ip">${escapeHtml(report.public_ip || 'Unknown')}</span>
                     </div>
-                </div>
-                <div class="report-footer">
-                    <button class="delete-btn" onclick="promptDelete('${report.id}', '${escapeHtml(report.pc_name)}')">DELETE REPORT</button>
+                    <button class="delete-btn" onclick="deleteReport(${report.id})">DELETE REPORT</button>
                 </div>
             `;
-            grid.appendChild(card);
-        });
+        }).join('');
     }
     
-    function promptDelete(id, pcName) {
-        pendingDeleteId = id;
-        document.getElementById('deleteMessage').innerHTML = `Delete report from <strong>${pcName}</strong>?<br>This action cannot be undone.`;
-        document.getElementById('deleteModal').style.display = 'flex';
-    }
-    
-    async function confirmDelete() {
-        if (!pendingDeleteId) return;
+    async function deleteReport(id) {
+        if (!confirm('Are you sure you want to delete this report?')) return;
         
         const { error } = await supabase
             .from('pc_reports')
             .delete()
-            .eq('id', pendingDeleteId);
+            .eq('id', id);
         
         if (error) {
             alert('Error deleting: ' + error.message);
         } else {
             await loadReports();
         }
-        
-        closeModal();
-        pendingDeleteId = null;
-    }
-    
-    async function deleteAllFiltered() {
-        const nameFilter = document.getElementById('filterName').value.toLowerCase();
-        const userFilter = document.getElementById('filterUser').value.toLowerCase();
-        const ipFilter = document.getElementById('filterIp').value.toLowerCase();
-        
-        let toDelete = allReports;
-        
-        if (nameFilter) {
-            toDelete = toDelete.filter(r => (r.pc_name || '').toLowerCase().includes(nameFilter));
-        }
-        if (userFilter) {
-            toDelete = toDelete.filter(r => (r.username || '').toLowerCase().includes(userFilter));
-        }
-        if (ipFilter) {
-            toDelete = toDelete.filter(r => 
-                (r.public_ip || '').toLowerCase().includes(ipFilter) ||
-                (r.local_ip || '').toLowerCase().includes(ipFilter)
-            );
-        }
-        
-        if (toDelete.length === 0) return;
-        
-        if (confirm(`Delete ${toDelete.length} reports? This cannot be undone.`)) {
-            for (const report of toDelete) {
-                await supabase.from('pc_reports').delete().eq('id', report.id);
-            }
-            await loadReports();
-        }
-    }
-    
-    function closeModal() {
-        document.getElementById('deleteModal').style.display = 'none';
     }
     
     function escapeHtml(str) {
@@ -786,11 +501,13 @@
         });
     }
     
-    // Event Listeners
-    document.getElementById('loginBtn').onclick = async () => {
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-        const errorDiv = document.getElementById('loginError');
+    // Auth handlers
+    let isLogin = true;
+    
+    document.getElementById('auth-btn').onclick = async () => {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('auth-error');
         
         errorDiv.textContent = '';
         
@@ -799,7 +516,7 @@
             return;
         }
         
-        if (isLoginMode) {
+        if (isLogin) {
             const { error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) {
                 errorDiv.textContent = error.message;
@@ -810,46 +527,44 @@
             const { error } = await supabase.auth.signUp({ 
                 email, 
                 password,
-                options: { data: { is_admin: true } }
+                options: {
+                    data: { is_admin: true }
+                }
             });
             if (error) {
                 errorDiv.textContent = error.message;
             } else {
                 errorDiv.textContent = 'Account created! Please login.';
-                isLoginMode = true;
-                document.getElementById('loginBtn').textContent = 'LOGIN';
-                document.getElementById('switchAuth').textContent = 'CREATE ACCOUNT';
+                isLogin = true;
+                document.getElementById('auth-btn').textContent = 'LOGIN';
+                document.getElementById('switch-auth').textContent = 'CREATE ACCOUNT';
             }
         }
     };
     
-    document.getElementById('switchAuth').onclick = () => {
-        isLoginMode = !isLoginMode;
-        document.getElementById('loginBtn').textContent = isLoginMode ? 'LOGIN' : 'CREATE ACCOUNT';
-        document.getElementById('switchAuth').textContent = isLoginMode ? 'CREATE ACCOUNT' : 'BACK TO LOGIN';
-        document.getElementById('loginError').textContent = '';
+    document.getElementById('switch-auth').onclick = () => {
+        isLogin = !isLogin;
+        document.getElementById('auth-btn').textContent = isLogin ? 'LOGIN' : 'CREATE ACCOUNT';
+        document.getElementById('switch-auth').textContent = isLogin ? 'CREATE ACCOUNT' : 'BACK TO LOGIN';
+        document.getElementById('auth-error').textContent = '';
     };
     
-    document.getElementById('logoutBtn').onclick = async () => {
+    document.getElementById('logout-btn').onclick = async () => {
         await supabase.auth.signOut();
         currentUser = null;
-        showLogin();
+        showAuth();
     };
     
-    document.getElementById('refreshBtn').onclick = () => loadReports();
-    document.getElementById('filterName').oninput = () => applyFilters();
-    document.getElementById('filterUser').oninput = () => applyFilters();
-    document.getElementById('filterIp').oninput = () => applyFilters();
-    document.getElementById('deleteAllBtn').onclick = () => deleteAllFiltered();
-    document.getElementById('cancelDeleteBtn').onclick = closeModal;
-    document.getElementById('confirmDeleteBtn').onclick = confirmDelete;
+    document.getElementById('refresh-btn').onclick = () => {
+        loadReports();
+    };
     
-    // Close modal when clicking outside
-    window.onclick = function(event) {
-        const modal = document.getElementById('deleteModal');
-        if (event.target === modal) {
-            closeModal();
-        }
+    document.getElementById('filter-name').oninput = () => {
+        applyFilters();
+    };
+    
+    document.getElementById('filter-ip').oninput = () => {
+        applyFilters();
     };
 </script>
 </body>
