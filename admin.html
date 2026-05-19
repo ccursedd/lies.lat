@@ -321,11 +321,11 @@ pre {
 <div id="toast"></div>
 
 <script>
-// FIXED: Using the correct service_role key from your Python script
+// USING THE ANON KEY (safe for browsers)
 const SB_URL = "https://jojyzviwhosnnkjbtbse.supabase.co";
-const SB_KEY = "sb_secret_hkj1c3jcv4Z2qQR-P_sWpQ_awnD-f-V";  // Changed to match Python script
+const SB_ANON_KEY = "sb_publishable_14hdnZTp2eAhvbxjz0aKdA_rrcCNWwX";  // Anon key for browser
 const { createClient } = supabase;
-const sb = createClient(SB_URL, SB_KEY);
+const sb = createClient(SB_URL, SB_ANON_KEY);
 
 let currentUser = null;
 let allReports = [];
@@ -335,7 +335,6 @@ let pendingDeleteAll = false;
 
 async function init() {
   try {
-    // Check for existing session
     const { data: { session } } = await sb.auth.getSession();
     if (session) {
       currentUser = session.user;
@@ -346,7 +345,6 @@ async function init() {
       showPage('auth');
     }
     
-    // Listen for auth changes
     sb.auth.onAuthStateChange((ev, sess) => {
       if (ev === 'SIGNED_IN' && sess) {
         currentUser = sess.user;
@@ -461,6 +459,8 @@ async function fetchReports() {
     console.error('Fetch error:', error);
     if (error.code === '42P01') {
       document.getElementById('specs-container').innerHTML = '<div class="empty-msg">⚠️ Table not found. Run SQL setup first.</div>';
+    } else if (error.code === '42501') {
+      document.getElementById('specs-container').innerHTML = '<div class="empty-msg">⚠️ Permission denied. Make sure RLS policies are configured correctly.</div>';
     } else {
       document.getElementById('specs-container').innerHTML = `<div class="empty-msg">⚠️ Error: ${error.message}</div>`;
     }
@@ -635,7 +635,6 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
 }
 
-// Start the app
 init();
 </script>
 </body>
