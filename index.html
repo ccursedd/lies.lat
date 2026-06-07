@@ -1,1 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>lies.lat</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
 
+<div class="noise"></div>
+
+<div id="loginView" class="view active">
+
+    <div class="loginBox">
+        <h1>lies.lat</h1>
+        <p>Private Content Platform</p>
+
+        <input type="email" placeholder="Email">
+        <input type="password" placeholder="Password">
+
+        <button>Login</button>
+    </div>
+
+</div>
+
+<div id="dashboardView" class="view">
+
+    <aside class="sidebar">
+        <div class="logo">
+            lies.lat
+        </div>
+
+        <button class="navBtn active">
+            Home
+        </button>
+
+        <button class="navBtn">
+            Routes
+        </button>
+
+        <button class="navBtn">
+            Uploads
+        </button>
+
+        <button class="navBtn logout">
+            Logout
+        </button>
+    </aside>
+
+    <main>
+
+        <section class="hero">
+
+            <h1>Dashboard</h1>
+
+            <div class="stats">
+
+                <div class="card">
+                    <span>Routes</span>
+                    <h2>12</h2>
+                </div>
+
+                <div class="card">
+                    <span>Uploads</span>
+                    <h2>44</h2>
+                </div>
+
+                <div class="card">
+                    <span>Views</span>
+                    <h2>1.2K</h2>
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="routes">
+
+            <div class="sectionTitle">
+                Create Route
+            </div>
+
+            <div class="routeBox">
+
+                <span>lies.lat/</span>
+
+                <input
+                    type="text"
+                    placeholder="script"
+                >
+
+                <button>Create</button>
+
+            </div>
+
+        </section>
+
+        <section class="uploads">
+
+            <div class="uploadArea">
+
+                <h3>Upload File</h3>
+
+                <input type="file">
+
+                <button>Upload</button>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script>
+document.querySelector("#loginView button")
+.addEventListener("click", () => {
+    loginView.classList.remove("active");
+    dashboardView.classList.add("active");
+});
+</script>
+
+</body>
+</html>
